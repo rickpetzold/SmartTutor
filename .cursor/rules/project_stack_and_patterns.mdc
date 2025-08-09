@@ -1,0 +1,87 @@
+# Project Stack & Architectural Patterns
+
+This document outlines the default technology stack and architectural patterns for the SmartTutor project.
+
+## Frontend (`/frontend`)
+
+- **Framework:** Next.js (App Router), React 18+, React Server Components where appropriate.
+- **Styling:** Tailwind CSS. Use [shadcn/ui](https://ui.shadcn.com/) for UI primitives. Ensure all components follow accessible patterns (WCAG 2.2 AA).
+- **State Management:**
+  - **Server State:** Use Server Components and [TanStack Query (React Query)](https://tanstack.com/query/latest) for client-side data fetching and caching.
+  - **Client State:** Use [Zustand](https://github.com/pmndrs/zustand) for complex client-side state, or React Context for very simple, localized state.
+- **Forms:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://github.com/colinhacks/zod) for schema validation. Share types between the server and client where possible.
+- **Rendering:** Default to Server-Side Rendering (SSR), Static Site Generation (SSG), or Incremental Static Regeneration (ISR) as appropriate for the page. Use `dynamic="error"` or `dynamic="force-dynamic"` intentionally and with justification.
+- **Internationalization (i18n):** Use `next-intl` with ICU message format. Support English (`en`) and Cantonese (`zh-HK`).
+
+## Backend (`/backend`)
+
+- **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.11+).
+- **Package Management:** Use `uv` for package installation and virtual environment management. Dependencies are listed in `backend/requirements.txt`.
+- **API Design:** Follow a design-first approach using OpenAPI. APIs should be versioned (e.g., `/api/v1/...`). Ensure mutations are idempotent. Implement pagination, filtering, and sorting for collection endpoints.
+- **Authentication:** The frontend will pass a Supabase-generated JWT. The backend will verify this JWT to authenticate requests.
+- **Validation:** Use Pydantic models for strict input validation and output serialization.
+
+## Database (`/supabase`)
+
+- **Provider:** [Supabase](https://supabase.com/) (PostgreSQL).
+- **Schema:** Default to normalized schemas. Use `JSONB` for flexible fields but apply constraints where possible.
+- **Migrations:** Database schema changes are managed via migration files in `supabase/migrations/`. Use the `supabase` CLI to create and apply migrations.
+
+## Testing
+
+- **Unit/Integration (Frontend):** [Vitest](https://vitest.dev/) or Jest.
+- **Unit/Integration (Backend):** [Pytest](https://docs.pytest.org/).
+- **End-to-End (E2E):** [Playwright](https://playwright.dev/).
+
+## CI/CD & DevEx
+
+- **CI Provider:** GitHub Actions.
+- **Linting/Formatting (Frontend):** ESLint (`typescript-eslint`) and Prettier.
+- **Linting/Formatting (Backend):** `ruff` and `black`.
+- **Docker:** Use multi-stage `Dockerfile` for building optimized production images.
+
+## Code Snippets & Templates
+
+### File Tree Example
+
+```
+- /
+  - frontend/
+    - src/
+      - app/
+      - components/
+      - lib/
+  - backend/
+    - main.py
+    - requirements.txt
+  - supabase/
+    - migrations/
+  - .github/
+    - workflows/
+      - ci.yml
+  - .gitignore
+  - README.md
+```
+
+### Next.js Setup Commands
+
+```bash
+# Assumes Next.js is already installed
+pnpm add @tanstack/react-query zod react-hook-form class-variance-authority zustand next-intl
+```
+
+### FastAPI Setup Commands
+
+```bash
+# From the project root
+cd backend
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+description:
+globs:
+alwaysApply: false
+
+---
