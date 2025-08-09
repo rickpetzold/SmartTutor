@@ -20,7 +20,7 @@
         "testStrategy": "Test all Pydantic models with valid and invalid data, verify CORS headers are correctly set, ensure FastAPI docs are accessible at /docs",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -44,7 +44,7 @@
         "dependencies": [
           25
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -57,7 +57,7 @@
         "dependencies": [
           23
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -168,11 +168,22 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "Build Main Dashboard UI",
+        "description": "Implement the main dashboard UI, including a two-column layout with placeholders for charts and a data table, and a header with account management functionality.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-09T20:20:57.923Z",
+      "updated": "2025-08-09T21:52:25.103Z",
       "description": "Tasks for master context"
     }
   }

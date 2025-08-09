@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
+from jose import jwt, JWTError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -20,6 +24,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+async def verify_token(authorization: str = Header(...)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    try:
+        token = authorization.replace("Bearer ", "")
+        jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+        if not jwt_secret:
+            raise HTTPException(status_code=500, detail="JWT secret not configured")
+        
+        payload = jwt.decode(
+            token,
+            jwt_secret,
+            algorithms=["HS256"],
+            audience="authenticated"
+        )
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 class LocationDistrictEnum(str, Enum):
     REMOTE = 'REMOTE'
@@ -127,7 +150,8 @@ def read_root():
 
 # Placeholder for POST /records
 @app.post("/records")
-def create_record(record: TutoringRecordCreate):
+def create_record(record: TutoringRecordCreate, user: dict = Depends(verify_token)):
     # In the next step, we'll implement the logic to save this to the database.
-    print(record.model_dump())
+    print("Authenticated user:", user)
+    print("Received record:", record.model_dump())
     return {"message": "Record received", "data": record.model_dump()} 

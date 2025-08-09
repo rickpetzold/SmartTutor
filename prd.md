@@ -109,8 +109,12 @@ For local development and managing the database schema, the Supabase CLI is used
 
 ## 6) UI/UX
 
-- **Pages:** Home (blurred stats), Submit form, Explorer, Error/Unlock gate.
-- **Components:** StatsCard, FilterBar, RecordsTable, PrivacyCallout, UnlockGate, Toasts.
+- **Main Dashboard Layout:** The primary user interface will be a modern dashboard. The main content area will be split into two columns:
+  - **Left Column (60% width):** This area will feature two interactive charts for data visualization (placeholders for now).
+  - **Right Column (40% width):** This area will display a data table showing anonymized tutoring records.
+- **Header:** A simple header will contain the application title and a "My Account" button with a dropdown menu for user actions (e.g., Sign Out).
+- **Pages:** The main page will be the dashboard. The submission form will likely be presented in a modal dialog over the dashboard.
+- **Components:** `Card` (for charts), `Table`, `Button`, `DropdownMenu`, `Dialog` (for the form).
 - **Copy:** “We never collect personal info. Submissions are anonymous and only used in aggregate.”
 
 ## 7) API / Server Contracts (FastAPI Backend)
