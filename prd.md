@@ -89,6 +89,24 @@ Build SmartTutor, a “give-to-get” marketplace for transparent private tutori
 - **Database:** **Supabase Postgres**. It will serve as the data layer, managed via migrations. Supabase Auth will be used for anonymous user JWT generation.
 - **Communication:** The Next.js frontend will make authenticated API calls to the FastAPI backend. The backend will verify the Supabase JWT and then connect to the Supabase database using a secure connection string.
 
+### 5.1 Supabase Setup
+
+For local development and managing the database schema, the Supabase CLI is used.
+
+- **Linking the project:** The local Supabase project is linked to the remote Supabase instance using the following command. This only needs to be done once.
+  ```bash
+  supabase link --project-ref <YOUR_PROJECT_REF>
+  ```
+- **Database Migrations:** All database schema changes are managed through migration files located in the `/supabase/migrations` directory. To apply new migrations to your local or remote database, you use:
+
+  ```bash
+  # To apply migrations to your linked Supabase project
+  supabase db push
+
+  # To create a new migration from local changes (not typically needed in our workflow)
+  # supabase db diff -f <migration_name>
+  ```
+
 ## 6) UI/UX
 
 - **Pages:** Home (blurred stats), Submit form, Explorer, Error/Unlock gate.
