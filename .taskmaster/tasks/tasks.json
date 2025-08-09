@@ -1,0 +1,179 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 23,
+        "title": "Setup Next.js Frontend with TypeScript and Core Dependencies",
+        "description": "Initialize Next.js 14+ project with App Router, TypeScript, Tailwind CSS, shadcn/ui, and configure next-intl for i18n support",
+        "details": "```bash\nnpx create-next-app@latest smarttutor-frontend --typescript --app --tailwind\ncd smarttutor-frontend\nnpm install @tanstack/react-query react-hook-form zod @hookform/resolvers\nnpm install next-intl\nnpx shadcn-ui@latest init\n```\n\nConfigure next-intl in app/[locale]/layout.tsx:\n```typescript\nimport {NextIntlClientProvider} from 'next-intl';\nimport {getMessages} from 'next-intl/server';\n\nexport default async function LocaleLayout({children, params: {locale}}) {\n  const messages = await getMessages();\n  return (\n    <NextIntlClientProvider messages={messages}>\n      {children}\n    </NextIntlClientProvider>\n  );\n}\n```\n\nSetup i18n config with en-HK and zh-HK locales, defaulting to en-HK",
+        "testStrategy": "Verify project builds successfully, all dependencies are installed, and i18n routing works for both en-HK and zh-HK paths",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Setup FastAPI Backend with Pydantic Models",
+        "description": "Create FastAPI Python backend with Pydantic models for data validation, CORS configuration, and Google Cloud Run deployment setup",
+        "details": "```python\n# requirements.txt\nfastapi==0.104.1\nuvicorn==0.24.0\npydantic==2.5.0\nsupabase==2.0.0\npython-jose[cryptography]==3.3.0\nhttpx==0.25.0\n\n# main.py\nfrom fastapi import FastAPI, HTTPException, Depends\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom pydantic import BaseModel, validator\nfrom enum import Enum\nimport os\n\napp = FastAPI()\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\nclass LocationDistrict(str, Enum):\n    REMOTE = \"REMOTE\"\n    MID_LEVELS = \"MID_LEVELS\"\n    # ... all districts from PRD\n\nclass Subject(str, Enum):\n    ENGLISH = \"ENGLISH\"\n    CHINESE = \"CHINESE\"\n    # ... all subjects from PRD\n\nclass TutoringRecord(BaseModel):\n    price_per_hour: float\n    currency: str\n    subject: Subject\n    location_district: LocationDistrict\n    tutor_academic_result: str | None = None\n    student_condition: str\n    parent_satisfaction: int | None = None\n    \n    @validator('parent_satisfaction')\n    def validate_satisfaction(cls, v):\n        if v is not None and (v < 1 or v > 5):\n            raise ValueError('Must be between 1 and 5')\n        return v\n```\n\nCreate Dockerfile for Cloud Run deployment",
+        "testStrategy": "Test all Pydantic models with valid and invalid data, verify CORS headers are correctly set, ensure FastAPI docs are accessible at /docs",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Setup Supabase Database Schema and Migrations",
+        "description": "Create Supabase project, define database schema with contributors and tutoring_records tables, setup enums and RLS policies",
+        "details": "```sql\n-- Create enums\nCREATE TYPE location_district AS ENUM (\n  'REMOTE', 'MID_LEVELS', 'POK_FU_LAM', 'CENTRAL_AND_SHEUNG_WAN',\n  -- ... all districts\n);\n\nCREATE TYPE subject AS ENUM (\n  'ENGLISH', 'CHINESE', 'MATHEMATICS', 'PHYSICS',\n  -- ... all subjects\n);\n\n-- Create contributors table\nCREATE TABLE contributors (\n  id UUID PRIMARY KEY REFERENCES auth.users(id),\n  has_contributed BOOLEAN DEFAULT FALSE,\n  tutoring_experience INTEGER,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- Create tutoring_records table\nCREATE TABLE tutoring_records (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  contributor_id UUID REFERENCES contributors(id),\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  price_per_hour NUMERIC NOT NULL,\n  currency TEXT NOT NULL,\n  location_district location_district NOT NULL,\n  subject subject NOT NULL,\n  tutor_academic_result TEXT,\n  student_condition TEXT NOT NULL,\n  parent_satisfaction INTEGER CHECK (parent_satisfaction >= 1 AND parent_satisfaction <= 5)\n);\n\n-- Create indexes\nCREATE INDEX idx_tutoring_records_filters ON tutoring_records(subject, location_district, student_condition);\n\n-- RLS policies (defense in depth)\nALTER TABLE contributors ENABLE ROW LEVEL SECURITY;\nALTER TABLE tutoring_records ENABLE ROW LEVEL SECURITY;\n\n-- Service role has full access\nCREATE POLICY \"Service role full access\" ON contributors FOR ALL USING (auth.role() = 'service_role');\nCREATE POLICY \"Service role full access\" ON tutoring_records FOR ALL USING (auth.role() = 'service_role');\n```",
+        "testStrategy": "Verify all tables and enums are created correctly, test RLS policies block direct access from anon users, ensure service role can perform all operations",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Implement Supabase Anonymous Authentication",
+        "description": "Configure Supabase Auth for anonymous sessions, implement JWT verification in FastAPI backend, and session management in Next.js frontend",
+        "details": "Frontend (Next.js):\n```typescript\n// lib/supabase.ts\nimport { createClient } from '@supabase/supabase-js'\n\nconst supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!\nconst supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!\n\nexport const supabase = createClient(supabaseUrl, supabaseAnonKey)\n\n// hooks/useAuth.ts\nexport function useAuth() {\n  const [session, setSession] = useState<Session | null>(null)\n  \n  useEffect(() => {\n    supabase.auth.getSession().then(({ data: { session } }) => {\n      if (!session) {\n        supabase.auth.signInAnonymously()\n      } else {\n        setSession(session)\n      }\n    })\n    \n    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {\n      setSession(session)\n    })\n    \n    return () => subscription.unsubscribe()\n  }, [])\n  \n  return { session }\n}\n```\n\nBackend (FastAPI):\n```python\nfrom jose import jwt, JWTError\nfrom fastapi import HTTPException, Header\n\nasync def verify_token(authorization: str = Header(...)):\n    try:\n        token = authorization.replace(\"Bearer \", \"\")\n        payload = jwt.decode(\n            token,\n            os.getenv(\"SUPABASE_JWT_SECRET\"),\n            algorithms=[\"HS256\"],\n            audience=\"authenticated\"\n        )\n        return payload\n    except JWTError:\n        raise HTTPException(status_code=401, detail=\"Invalid token\")\n```",
+        "testStrategy": "Test anonymous sign-in creates a session, verify JWT tokens are correctly passed to backend, ensure backend rejects invalid/expired tokens",
+        "priority": "high",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Build Tutoring Record Submission Form",
+        "description": "Create React Hook Form with Zod validation for tutoring record submission, including all required fields and client-side validation",
+        "details": "```typescript\n// schemas/tutoring-record.ts\nimport { z } from 'zod'\n\nexport const tutoringRecordSchema = z.object({\n  price_per_hour: z.number().positive(),\n  currency: z.enum(['HKD', 'USD']),\n  subject: z.enum(['ENGLISH', 'CHINESE', /* ... */]),\n  location_district: z.enum(['REMOTE', 'MID_LEVELS', /* ... */]),\n  tutor_academic_result: z.string().optional(),\n  student_condition: z.string(),\n  parent_satisfaction: z.number().min(1).max(5).optional(),\n  tutoring_experience: z.number().positive().optional()\n})\n\n// components/TutoringRecordForm.tsx\nimport { useForm } from 'react-hook-form'\nimport { zodResolver } from '@hookform/resolvers/zod'\nimport { Button, Input, Select, Label } from '@/components/ui'\n\nexport function TutoringRecordForm() {\n  const { register, handleSubmit, formState: { errors } } = useForm({\n    resolver: zodResolver(tutoringRecordSchema)\n  })\n  \n  const onSubmit = async (data) => {\n    // Submit to API\n  }\n  \n  return (\n    <form onSubmit={handleSubmit(onSubmit)} className=\"space-y-4\">\n      <div>\n        <Label htmlFor=\"price_per_hour\">Price per Hour</Label>\n        <Input\n          type=\"number\"\n          {...register('price_per_hour', { valueAsNumber: true })}\n          aria-invalid={!!errors.price_per_hour}\n        />\n        {errors.price_per_hour && <span className=\"text-red-500\">{errors.price_per_hour.message}</span>}\n      </div>\n      {/* Additional fields... */}\n    </form>\n  )\n}\n```\n\nImplement all form fields with proper accessibility labels and error messages",
+        "testStrategy": "Test form validation catches invalid inputs, verify all fields are properly validated, ensure form is keyboard navigable and screen reader friendly",
+        "priority": "high",
+        "dependencies": [
+          23
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Implement POST /records API Endpoint",
+        "description": "Create FastAPI endpoint to receive tutoring records, validate data, upsert contributor, insert record, and handle unlock logic",
+        "details": "```python\n@app.post(\"/records\")\nasync def create_record(\n    record: TutoringRecord,\n    user = Depends(verify_token),\n    supabase = Depends(get_supabase_client)\n):\n    user_id = user['sub']\n    \n    try:\n        # Upsert contributor\n        contributor_data = {\n            'id': user_id,\n            'has_contributed': True,\n            'tutoring_experience': record.tutoring_experience\n        }\n        \n        supabase.table('contributors').upsert(\n            contributor_data,\n            on_conflict='id'\n        ).execute()\n        \n        # Insert tutoring record\n        record_data = {\n            'contributor_id': user_id,\n            'price_per_hour': record.price_per_hour,\n            'currency': record.currency,\n            'subject': record.subject.value,\n            'location_district': record.location_district.value,\n            'tutor_academic_result': record.tutor_academic_result,\n            'student_condition': record.student_condition,\n            'parent_satisfaction': record.parent_satisfaction\n        }\n        \n        result = supabase.table('tutoring_records').insert(record_data).execute()\n        \n        # Log unlock event\n        await log_event({\n            'event_type': 'unlock',\n            'user_id': user_id,\n            'metadata': {'record_id': result.data[0]['id']}\n        })\n        \n        return {\n            'success': True,\n            'message': 'Record submitted successfully',\n            'unlocked': True\n        }\n        \n    except Exception as e:\n        raise HTTPException(status_code=500, detail=str(e))\n```",
+        "testStrategy": "Test with valid and invalid data, verify contributor is created/updated correctly, ensure duplicate submissions are handled gracefully, check unlock event is logged",
+        "priority": "high",
+        "dependencies": [
+          24,
+          25,
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Build Data Explorer UI Components",
+        "description": "Create FilterBar, StatsCard, and RecordsTable components with shadcn/ui for the data explorer interface",
+        "details": "```typescript\n// components/FilterBar.tsx\nexport function FilterBar({ onFilterChange }) {\n  const [filters, setFilters] = useState({\n    subject: '',\n    location_district: '',\n    student_condition: '',\n    tutoring_mode: ''\n  })\n  \n  return (\n    <div className=\"flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg\">\n      <Select\n        value={filters.subject}\n        onValueChange={(value) => {\n          setFilters({ ...filters, subject: value })\n          onFilterChange({ ...filters, subject: value })\n        }}\n      >\n        <SelectTrigger className=\"w-[180px]\">\n          <SelectValue placeholder=\"Select subject\" />\n        </SelectTrigger>\n        <SelectContent>\n          {SUBJECTS.map(subject => (\n            <SelectItem key={subject} value={subject}>{subject}</SelectItem>\n          ))}\n        </SelectContent>\n      </Select>\n      {/* Additional filters... */}\n    </div>\n  )\n}\n\n// components/StatsCard.tsx\nexport function StatsCard({ stats, isLocked }) {\n  if (isLocked) {\n    return (\n      <div className=\"relative p-6 bg-white rounded-lg shadow filter blur-sm\">\n        <div className=\"absolute inset-0 flex items-center justify-center\">\n          <Lock className=\"w-8 h-8 text-gray-400\" />\n        </div>\n        {/* Blurred content */}\n      </div>\n    )\n  }\n  \n  return (\n    <div className=\"grid grid-cols-2 md:grid-cols-5 gap-4\">\n      <StatItem label=\"Mean\" value={`$${stats.mean}/hr`} />\n      <StatItem label=\"Median\" value={`$${stats.median}/hr`} />\n      <StatItem label=\"Mode\" value={`$${stats.mode}/hr`} />\n      <StatItem label=\"Min\" value={`$${stats.min}/hr`} />\n      <StatItem label=\"Max\" value={`$${stats.max}/hr`} />\n    </div>\n  )\n}\n```",
+        "testStrategy": "Test filter changes trigger correct callbacks, verify stats display correctly when unlocked and blur when locked, ensure responsive design works on mobile",
+        "priority": "medium",
+        "dependencies": [
+          23,
+          27
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Implement GET /stats and GET /records Endpoints",
+        "description": "Create FastAPI endpoints for retrieving filtered statistics and paginated anonymized records with proper access control",
+        "details": "```python\n@app.get(\"/stats\")\nasync def get_stats(\n    subject: Subject | None = None,\n    location_district: LocationDistrict | None = None,\n    student_condition: str | None = None,\n    user = Depends(verify_token),\n    supabase = Depends(get_supabase_client)\n):\n    # Check if user has contributed\n    contributor = supabase.table('contributors').select('has_contributed').eq('id', user['sub']).single().execute()\n    \n    if not contributor.data or not contributor.data['has_contributed']:\n        raise HTTPException(status_code=403, detail=\"Access denied. Please contribute first.\")\n    \n    # Build query\n    query = supabase.table('tutoring_records').select('price_per_hour')\n    \n    if subject:\n        query = query.eq('subject', subject.value)\n    if location_district:\n        query = query.eq('location_district', location_district.value)\n    if student_condition:\n        query = query.eq('student_condition', student_condition)\n    \n    records = query.execute()\n    prices = [r['price_per_hour'] for r in records.data]\n    \n    if not prices:\n        return {\n            'mean': 0,\n            'median': 0,\n            'mode': 0,\n            'min': 0,\n            'max': 0,\n            'count': 0\n        }\n    \n    return {\n        'mean': statistics.mean(prices),\n        'median': statistics.median(prices),\n        'mode': statistics.mode(prices) if len(prices) > 0 else 0,\n        'min': min(prices),\n        'max': max(prices),\n        'count': len(prices)\n    }\n\n@app.get(\"/records\")\nasync def get_records(\n    page: int = 1,\n    limit: int = 20,\n    # ... filter parameters\n    user = Depends(verify_token),\n    supabase = Depends(get_supabase_client)\n):\n    # Similar access check and query building\n    # Return anonymized records without contributor_id\n```",
+        "testStrategy": "Test access control blocks non-contributors, verify filters work correctly, ensure statistics calculations are accurate, check pagination works properly",
+        "priority": "medium",
+        "dependencies": [
+          26,
+          28
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Implement Give-to-Get Access Control",
+        "description": "Create unlock gate UI component and integrate access control logic throughout the application",
+        "details": "```typescript\n// components/UnlockGate.tsx\nexport function UnlockGate({ children }) {\n  const { data: hasAccess, isLoading } = useQuery({\n    queryKey: ['access-status'],\n    queryFn: checkAccessStatus\n  })\n  \n  if (isLoading) return <Skeleton />\n  \n  if (!hasAccess) {\n    return (\n      <div className=\"max-w-2xl mx-auto p-8 text-center\">\n        <Lock className=\"w-16 h-16 mx-auto mb-4 text-gray-400\" />\n        <h2 className=\"text-2xl font-bold mb-4\">Unlock Full Access</h2>\n        <p className=\"text-gray-600 mb-6\">\n          Share your tutoring experience anonymously to unlock complete market insights\n        </p>\n        <Button asChild size=\"lg\">\n          <Link href=\"/submit\">Submit Your Data</Link>\n        </Button>\n        \n        <div className=\"mt-8 p-4 bg-blue-50 rounded-lg\">\n          <Shield className=\"w-5 h-5 inline mr-2 text-blue-600\" />\n          <span className=\"text-sm text-blue-800\">\n            We never collect personal information. All submissions are anonymous.\n          </span>\n        </div>\n      </div>\n    )\n  }\n  \n  return children\n}\n\n// hooks/useAccessStatus.ts\nexport function useAccessStatus() {\n  const { session } = useAuth()\n  \n  return useQuery({\n    queryKey: ['access-status', session?.user?.id],\n    queryFn: async () => {\n      if (!session) return false\n      \n      const response = await fetch('/api/check-access', {\n        headers: {\n          'Authorization': `Bearer ${session.access_token}`\n        }\n      })\n      \n      return response.ok\n    },\n    enabled: !!session\n  })\n}\n```",
+        "testStrategy": "Test gate shows for non-contributors and allows access for contributors, verify access persists across page refreshes, ensure loading states work correctly",
+        "priority": "medium",
+        "dependencies": [
+          29,
+          30
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Implement Analytics and Observability",
+        "description": "Create event logging system for access events and implement basic observability with structured logging",
+        "details": "```python\n# models/events.py\nfrom pydantic import BaseModel\nfrom datetime import datetime\nfrom typing import Dict, Any\n\nclass AccessEvent(BaseModel):\n    event_type: str  # 'unlock', 'view_stats', 'view_records'\n    user_id: str\n    timestamp: datetime = Field(default_factory=datetime.utcnow)\n    metadata: Dict[str, Any] = {}\n\n# endpoints\n@app.post(\"/log_event\")\nasync def log_event(\n    event: AccessEvent,\n    user = Depends(verify_token),\n    supabase = Depends(get_supabase_client)\n):\n    # Fire and forget - don't block on logging\n    try:\n        supabase.table('access_events').insert({\n            'event_type': event.event_type,\n            'user_id': user['sub'],\n            'metadata': event.metadata\n        }).execute()\n    except Exception as e:\n        logger.error(f\"Failed to log event: {e}\")\n    \n    return {\"status\": \"ok\"}\n\n# Structured logging setup\nimport structlog\n\nlogger = structlog.get_logger()\n\n# Log query performance\n@app.middleware(\"http\")\nasync def log_requests(request: Request, call_next):\n    start_time = time.time()\n    response = await call_next(request)\n    process_time = time.time() - start_time\n    \n    logger.info(\n        \"request_processed\",\n        path=request.url.path,\n        method=request.method,\n        status_code=response.status_code,\n        process_time=process_time\n    )\n    \n    return response\n```\n\nCreate access_events table in Supabase migration",
+        "testStrategy": "Verify events are logged correctly, test that logging failures don't break main functionality, ensure query performance metrics are captured",
+        "priority": "low",
+        "dependencies": [
+          24,
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Build Mobile-First Responsive UI",
+        "description": "Implement responsive design patterns, optimize for mobile performance, and ensure touch-friendly interactions",
+        "details": "```typescript\n// tailwind.config.js - Mobile-first breakpoints\nmodule.exports = {\n  theme: {\n    screens: {\n      'sm': '640px',\n      'md': '768px',\n      'lg': '1024px',\n      'xl': '1280px',\n    }\n  }\n}\n\n// components/Layout.tsx\nexport function Layout({ children }) {\n  return (\n    <div className=\"min-h-screen bg-gray-50\">\n      <nav className=\"sticky top-0 z-50 bg-white shadow-sm\">\n        <div className=\"container mx-auto px-4 py-3\">\n          <div className=\"flex items-center justify-between\">\n            <h1 className=\"text-xl font-bold\">SmartTutor</h1>\n            <button className=\"md:hidden p-2\" aria-label=\"Menu\">\n              <Menu className=\"w-6 h-6\" />\n            </button>\n          </div>\n        </div>\n      </nav>\n      \n      <main className=\"container mx-auto px-4 py-6 md:py-8\">\n        {children}\n      </main>\n    </div>\n  )\n}\n\n// Optimize touch targets\n.touch-target {\n  min-height: 44px;\n  min-width: 44px;\n}\n\n// Implement viewport meta tag\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=5\" />\n\n// Use CSS containment for performance\n.card {\n  contain: layout style paint;\n}\n```\n\nImplement lazy loading for images and heavy components",
+        "testStrategy": "Test on various mobile devices and screen sizes, verify touch targets meet 44x44px minimum, ensure no horizontal scrolling on mobile, test performance on low-end devices",
+        "priority": "medium",
+        "dependencies": [
+          27,
+          29,
+          31
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Deploy and Configure Production Infrastructure",
+        "description": "Deploy Next.js to Vercel, FastAPI to Google Cloud Run, configure environment variables, and setup monitoring",
+        "details": "```yaml\n# cloudbuild.yaml for Google Cloud Run\nsteps:\n  - name: 'gcr.io/cloud-builders/docker'\n    args: ['build', '-t', 'gcr.io/$PROJECT_ID/smarttutor-api', '.']\n  - name: 'gcr.io/cloud-builders/docker'\n    args: ['push', 'gcr.io/$PROJECT_ID/smarttutor-api']\n  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'\n    entrypoint: gcloud\n    args:\n      - 'run'\n      - 'deploy'\n      - 'smarttutor-api'\n      - '--image=gcr.io/$PROJECT_ID/smarttutor-api'\n      - '--region=asia-east1'\n      - '--platform=managed'\n      - '--allow-unauthenticated'\n      - '--set-env-vars=SUPABASE_URL=${_SUPABASE_URL},SUPABASE_SERVICE_KEY=${_SUPABASE_SERVICE_KEY}'\n\n# Vercel configuration\n{\n  \"buildCommand\": \"npm run build\",\n  \"outputDirectory\": \".next\",\n  \"framework\": \"nextjs\",\n  \"regions\": [\"hkg1\"],\n  \"env\": {\n    \"NEXT_PUBLIC_API_URL\": \"@smarttutor-api-url\",\n    \"NEXT_PUBLIC_SUPABASE_URL\": \"@supabase-url\",\n    \"NEXT_PUBLIC_SUPABASE_ANON_KEY\": \"@supabase-anon-key\"\n  }\n}\n\n# Setup monitoring\n- Configure Google Cloud Monitoring for Cloud Run\n- Setup Vercel Analytics\n- Configure Supabase database monitoring\n- Setup error tracking with Sentry\n```",
+        "testStrategy": "Verify all environment variables are correctly set, test API endpoints work in production, ensure CORS is properly configured, verify SSL certificates are valid",
+        "priority": "low",
+        "dependencies": [
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-09T07:17:25.953Z",
+      "updated": "2025-08-09T20:20:57.923Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
