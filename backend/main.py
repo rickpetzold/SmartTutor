@@ -7,6 +7,7 @@ from typing import Optional
 from uuid import UUID
 from jose import jwt, JWTError
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 load_dotenv()
 
@@ -25,24 +26,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Supabase client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+    raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in backend/.env")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+def get_supabase_client() -> Client:
+    return supabase
+
 async def verify_token(authorization: str = Header(...)):
+    """
+    Verifies the Supabase JWT token from the Authorization header.
+    This function now provides more specific error handling to aid in debugging.
+    """
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
+    
+    token = authorization.replace("Bearer ", "").strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Token is missing or empty")
+
     try:
-        token = authorization.replace("Bearer ", "")
-        jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
-        if not jwt_secret:
-            raise HTTPException(status_code=500, detail="JWT secret not configured")
+        # Ask Supabase Auth to validate the token.
+        # This will raise an AuthApiError if the token is invalid or expired.
+        user_resp = supabase.auth.get_user(token)
+        user = getattr(user_resp, "user", None)
         
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated"
-        )
+        if not user:
+            # This is a fallback, as get_user should raise an error before this.
+            raise HTTPException(status_code=401, detail="User not found for this token")
+
+        # Normalize the payload to return the user's ID and email.
+        payload = {
+            "sub": str(user.id),
+            "email": getattr(user, "email", None),
+        }
         return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        # Catch any other unexpected errors during token verification.
+        print(f"An unexpected error occurred during token verification: {e}")
+        raise HTTPException(status_code=500, detail="Error verifying token")
+
 
 class LocationDistrictEnum(str, Enum):
     REMOTE = 'REMOTE'
@@ -142,16 +169,44 @@ class TutoringRecordCreate(BaseModel):
     tutor_academic_result: Optional[str] = None
     student_condition: str
     parent_satisfaction: Optional[int] = Field(None, ge=1, le=5)
-    tutoring_experience: Optional[int] = Field(None, ge=0)
 
 @app.get("/")
 def read_root():
     return {"message": "SmartTutor API"}
 
-# Placeholder for POST /records
 @app.post("/records")
-def create_record(record: TutoringRecordCreate, user: dict = Depends(verify_token)):
-    # In the next step, we'll implement the logic to save this to the database.
-    print("Authenticated user:", user)
-    print("Received record:", record.model_dump())
-    return {"message": "Record received", "data": record.model_dump()} 
+async def create_record(
+    record: TutoringRecordCreate,
+    user: dict = Depends(verify_token),
+    db: Client = Depends(get_supabase_client),
+):
+    user_id = user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID not found in token")
+
+    try:
+        # Upsert contributor
+        contributor_data = {
+            "id": user_id,
+            "has_contributed": True,
+            "tutoring_experience": record.tutoring_experience,
+        }
+        db.table("contributors").upsert(contributor_data, on_conflict="id").execute()
+
+        # Insert tutoring record (serialize enums to string values)
+        rec = record.model_dump()
+        rec["contributor_id"] = user_id
+        rec["subject"] = record.subject.value
+        rec["location_district"] = record.location_district.value
+
+        result = db.table("tutoring_records").insert(rec).execute()
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Insert failed")
+
+        return {
+            "success": True,
+            "message": "Record submitted successfully",
+            "record_id": result.data[0]["id"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 

@@ -1,0 +1,68 @@
+# Task ID: 30
+# Title: Implement GET /stats and GET /records Endpoints
+# Status: pending
+# Dependencies: 26, 28
+# Priority: medium
+# Description: Create FastAPI endpoints for retrieving filtered statistics and paginated anonymized records with proper access control
+# Details:
+```python
+@app.get("/stats")
+async def get_stats(
+    subject: Subject | None = None,
+    location_district: LocationDistrict | None = None,
+    student_condition: str | None = None,
+    user = Depends(verify_token),
+    supabase = Depends(get_supabase_client)
+):
+    # Check if user has contributed
+    contributor = supabase.table('contributors').select('has_contributed').eq('id', user['sub']).single().execute()
+    
+    if not contributor.data or not contributor.data['has_contributed']:
+        raise HTTPException(status_code=403, detail="Access denied. Please contribute first.")
+    
+    # Build query
+    query = supabase.table('tutoring_records').select('price_per_hour')
+    
+    if subject:
+        query = query.eq('subject', subject.value)
+    if location_district:
+        query = query.eq('location_district', location_district.value)
+    if student_condition:
+        query = query.eq('student_condition', student_condition)
+    
+    records = query.execute()
+    prices = [r['price_per_hour'] for r in records.data]
+    
+    if not prices:
+        return {
+            'mean': 0,
+            'median': 0,
+            'mode': 0,
+            'min': 0,
+            'max': 0,
+            'count': 0
+        }
+    
+    return {
+        'mean': statistics.mean(prices),
+        'median': statistics.median(prices),
+        'mode': statistics.mode(prices) if len(prices) > 0 else 0,
+        'min': min(prices),
+        'max': max(prices),
+        'count': len(prices)
+    }
+
+@app.get("/records")
+async def get_records(
+    page: int = 1,
+    limit: int = 20,
+    # ... filter parameters
+    user = Depends(verify_token),
+    supabase = Depends(get_supabase_client)
+):
+    # Similar access check and query building
+    # Return anonymized records without contributor_id
+```
+
+# Test Strategy:
+Test access control blocks non-contributors, verify filters work correctly, ensure statistics calculations are accurate, check pagination works properly

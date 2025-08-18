@@ -72,8 +72,18 @@
           25,
           26
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Switch token verification to Supabase Auth get_user(access_token)",
+            "description": "Replace manual HS256 JWT decode with Supabase Auth validation to prevent 401 due to mismatched secrets/issuer and support anonymous sessions.",
+            "details": "In `backend/main.py`, `verify_token` now calls `supabase.auth.get_user(access_token)` and returns `{ sub: user.id, email }`. Frontend continues to send `Authorization: Bearer ${session.access_token}`. Ensure backend has `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` set. Test via curl with a fresh token.",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 28
+          }
+        ]
       },
       {
         "id": 29,
@@ -179,11 +189,37 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "Enable RLS on public.contributors",
+        "description": "Enable Row Level Security and lock down access on contributors; allow backend (service role) full access only.",
+        "details": "```sql\n-- Enable RLS\nDO $$ BEGIN\n  ALTER TABLE public.contributors ENABLE ROW LEVEL SECURITY;\nEXCEPTION WHEN others THEN\n  -- ignore if already enabled\n  NULL;\nEND $$;\n\n-- Optional: Drop existing permissive policies to start clean\n-- DROP POLICY IF EXISTS \"Allow all\" ON public.contributors;\n\n-- Service role policy (defense in depth; service role bypasses RLS by default)\nDO $$ BEGIN\n  CREATE POLICY \"service role full access\"\n  ON public.contributors\n  FOR ALL\n  USING (auth.role() = 'service_role')\n  WITH CHECK (auth.role() = 'service_role');\nEXCEPTION WHEN others THEN\n  NULL;\nEND $$;\n```",
+        "testStrategy": "From anon client, direct select should fail (403) via PostgREST; from backend using service key, insert/select should succeed.",
+        "priority": "high",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Enable RLS on public.tutoring_records",
+        "description": "Enable Row Level Security and lock down access on tutoring_records; allow backend (service role) full access only.",
+        "details": "```sql\n-- Enable RLS\nDO $$ BEGIN\n  ALTER TABLE public.tutoring_records ENABLE ROW LEVEL SECURITY;\nEXCEPTION WHEN others THEN\n  -- ignore if already enabled\n  NULL;\nEND $$;\n\n-- Optional: Drop existing permissive policies to start clean\n-- DROP POLICY IF EXISTS \"Allow all\" ON public.tutoring_records;\n\n-- Service role policy (defense in depth; service role bypasses RLS by default)\nDO $$ BEGIN\n  CREATE POLICY \"service role full access\"\n  ON public.tutoring_records\n  FOR ALL\n  USING (auth.role() = 'service_role')\n  WITH CHECK (auth.role() = 'service_role');\nEXCEPTION WHEN others THEN\n  NULL;\nEND $$;\n```",
+        "testStrategy": "From anon client, direct select should fail (403) via PostgREST; from backend using service key, insert/select should succeed.",
+        "priority": "high",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-09T21:52:25.103Z",
+      "updated": "2025-08-12T22:49:16.534Z",
       "description": "Tasks for master context"
     }
   }

@@ -1,0 +1,63 @@
+# Task ID: 24
+# Title: Setup FastAPI Backend with Pydantic Models
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Create FastAPI Python backend with Pydantic models for data validation, CORS configuration, and Google Cloud Run deployment setup
+# Details:
+```python
+# requirements.txt
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+supabase==2.0.0
+python-jose[cryptography]==3.3.0
+httpx==0.25.0
+
+# main.py
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, validator
+from enum import Enum
+import os
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class LocationDistrict(str, Enum):
+    REMOTE = "REMOTE"
+    MID_LEVELS = "MID_LEVELS"
+    # ... all districts from PRD
+
+class Subject(str, Enum):
+    ENGLISH = "ENGLISH"
+    CHINESE = "CHINESE"
+    # ... all subjects from PRD
+
+class TutoringRecord(BaseModel):
+    price_per_hour: float
+    currency: str
+    subject: Subject
+    location_district: LocationDistrict
+    tutor_academic_result: str | None = None
+    student_condition: str
+    parent_satisfaction: int | None = None
+    
+    @validator('parent_satisfaction')
+    def validate_satisfaction(cls, v):
+        if v is not None and (v < 1 or v > 5):
+            raise ValueError('Must be between 1 and 5')
+        return v
+```
+
+Create Dockerfile for Cloud Run deployment
+
+# Test Strategy:
+Test all Pydantic models with valid and invalid data, verify CORS headers are correctly set, ensure FastAPI docs are accessible at /docs

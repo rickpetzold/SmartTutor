@@ -1,0 +1,48 @@
+# Task ID: 34
+# Title: Deploy and Configure Production Infrastructure
+# Status: pending
+# Dependencies: 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33
+# Priority: low
+# Description: Deploy Next.js to Vercel, FastAPI to Google Cloud Run, configure environment variables, and setup monitoring
+# Details:
+```yaml
+# cloudbuild.yaml for Google Cloud Run
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/smarttutor-api', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/smarttutor-api']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'smarttutor-api'
+      - '--image=gcr.io/$PROJECT_ID/smarttutor-api'
+      - '--region=asia-east1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=SUPABASE_URL=${_SUPABASE_URL},SUPABASE_SERVICE_KEY=${_SUPABASE_SERVICE_KEY}'
+
+# Vercel configuration
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "regions": ["hkg1"],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@smarttutor-api-url",
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key"
+  }
+}
+
+# Setup monitoring
+- Configure Google Cloud Monitoring for Cloud Run
+- Setup Vercel Analytics
+- Configure Supabase database monitoring
+- Setup error tracking with Sentry
+```
+
+# Test Strategy:
+Verify all environment variables are correctly set, test API endpoints work in production, ensure CORS is properly configured, verify SSL certificates are valid

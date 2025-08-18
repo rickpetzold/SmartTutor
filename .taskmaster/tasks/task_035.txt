@@ -1,0 +1,11 @@
+# Task ID: 35
+# Title: Build Main Dashboard UI
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Implement the main dashboard UI, including a two-column layout with placeholders for charts and a data table, and a header with account management functionality.
+# Details:
+
+
+# Test Strategy:
+

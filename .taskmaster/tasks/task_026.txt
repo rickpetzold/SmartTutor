@@ -1,0 +1,62 @@
+# Task ID: 26
+# Title: Implement Supabase Anonymous Authentication
+# Status: done
+# Dependencies: 25
+# Priority: high
+# Description: Configure Supabase Auth for anonymous sessions, implement JWT verification in FastAPI backend, and session management in Next.js frontend
+# Details:
+Frontend (Next.js):
+```typescript
+// lib/supabase.ts
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// hooks/useAuth.ts
+export function useAuth() {
+  const [session, setSession] = useState<Session | null>(null)
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        supabase.auth.signInAnonymously()
+      } else {
+        setSession(session)
+      }
+    })
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [])
+  
+  return { session }
+}
+```
+
+Backend (FastAPI):
+```python
+from jose import jwt, JWTError
+from fastapi import HTTPException, Header
+
+async def verify_token(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(
+            token,
+            os.getenv("SUPABASE_JWT_SECRET"),
+            algorithms=["HS256"],
+            audience="authenticated"
+        )
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+```
+
+# Test Strategy:
+Test anonymous sign-in creates a session, verify JWT tokens are correctly passed to backend, ensure backend rejects invalid/expired tokens

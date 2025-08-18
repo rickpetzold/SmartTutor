@@ -1,0 +1,61 @@
+# Task ID: 33
+# Title: Build Mobile-First Responsive UI
+# Status: pending
+# Dependencies: 27, 29, 31
+# Priority: medium
+# Description: Implement responsive design patterns, optimize for mobile performance, and ensure touch-friendly interactions
+# Details:
+```typescript
+// tailwind.config.js - Mobile-first breakpoints
+module.exports = {
+  theme: {
+    screens: {
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+    }
+  }
+}
+
+// components/Layout.tsx
+export function Layout({ children }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="sticky top-0 z-50 bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">SmartTutor</h1>
+            <button className="md:hidden p-2" aria-label="Menu">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </nav>
+      
+      <main className="container mx-auto px-4 py-6 md:py-8">
+        {children}
+      </main>
+    </div>
+  )
+}
+
+// Optimize touch targets
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+// Implement viewport meta tag
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+
+// Use CSS containment for performance
+.card {
+  contain: layout style paint;
+}
+```
+
+Implement lazy loading for images and heavy components
+
+# Test Strategy:
+Test on various mobile devices and screen sizes, verify touch targets meet 44x44px minimum, ensure no horizontal scrolling on mobile, test performance on low-end devices

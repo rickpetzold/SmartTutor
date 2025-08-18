@@ -1,0 +1,67 @@
+# Task ID: 29
+# Title: Build Data Explorer UI Components
+# Status: pending
+# Dependencies: 23, 27
+# Priority: medium
+# Description: Create FilterBar, StatsCard, and RecordsTable components with shadcn/ui for the data explorer interface
+# Details:
+```typescript
+// components/FilterBar.tsx
+export function FilterBar({ onFilterChange }) {
+  const [filters, setFilters] = useState({
+    subject: '',
+    location_district: '',
+    student_condition: '',
+    tutoring_mode: ''
+  })
+  
+  return (
+    <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+      <Select
+        value={filters.subject}
+        onValueChange={(value) => {
+          setFilters({ ...filters, subject: value })
+          onFilterChange({ ...filters, subject: value })
+        }}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select subject" />
+        </SelectTrigger>
+        <SelectContent>
+          {SUBJECTS.map(subject => (
+            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {/* Additional filters... */}
+    </div>
+  )
+}
+
+// components/StatsCard.tsx
+export function StatsCard({ stats, isLocked }) {
+  if (isLocked) {
+    return (
+      <div className="relative p-6 bg-white rounded-lg shadow filter blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Lock className="w-8 h-8 text-gray-400" />
+        </div>
+        {/* Blurred content */}
+      </div>
+    )
+  }
+  
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <StatItem label="Mean" value={`$${stats.mean}/hr`} />
+      <StatItem label="Median" value={`$${stats.median}/hr`} />
+      <StatItem label="Mode" value={`$${stats.mode}/hr`} />
+      <StatItem label="Min" value={`$${stats.min}/hr`} />
+      <StatItem label="Max" value={`$${stats.max}/hr`} />
+    </div>
+  )
+}
+```
+
+# Test Strategy:
+Test filter changes trigger correct callbacks, verify stats display correctly when unlocked and blur when locked, ensure responsive design works on mobile

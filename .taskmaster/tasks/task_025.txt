@@ -1,0 +1,55 @@
+# Task ID: 25
+# Title: Setup Supabase Database Schema and Migrations
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Create Supabase project, define database schema with contributors and tutoring_records tables, setup enums and RLS policies
+# Details:
+```sql
+-- Create enums
+CREATE TYPE location_district AS ENUM (
+  'REMOTE', 'MID_LEVELS', 'POK_FU_LAM', 'CENTRAL_AND_SHEUNG_WAN',
+  -- ... all districts
+);
+
+CREATE TYPE subject AS ENUM (
+  'ENGLISH', 'CHINESE', 'MATHEMATICS', 'PHYSICS',
+  -- ... all subjects
+);
+
+-- Create contributors table
+CREATE TABLE contributors (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  has_contributed BOOLEAN DEFAULT FALSE,
+  tutoring_experience INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create tutoring_records table
+CREATE TABLE tutoring_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contributor_id UUID REFERENCES contributors(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  price_per_hour NUMERIC NOT NULL,
+  currency TEXT NOT NULL,
+  location_district location_district NOT NULL,
+  subject subject NOT NULL,
+  tutor_academic_result TEXT,
+  student_condition TEXT NOT NULL,
+  parent_satisfaction INTEGER CHECK (parent_satisfaction >= 1 AND parent_satisfaction <= 5)
+);
+
+-- Create indexes
+CREATE INDEX idx_tutoring_records_filters ON tutoring_records(subject, location_district, student_condition);
+
+-- RLS policies (defense in depth)
+ALTER TABLE contributors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tutoring_records ENABLE ROW LEVEL SECURITY;
+
+-- Service role has full access
+CREATE POLICY "Service role full access" ON contributors FOR ALL USING (auth.role() = 'service_role');
+CREATE POLICY "Service role full access" ON tutoring_records FOR ALL USING (auth.role() = 'service_role');
+```
+
+# Test Strategy:
+Verify all tables and enums are created correctly, test RLS policies block direct access from anon users, ensure service role can perform all operations

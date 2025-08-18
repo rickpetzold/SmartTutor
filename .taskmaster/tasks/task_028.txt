@@ -1,0 +1,70 @@
+# Task ID: 28
+# Title: Implement POST /records API Endpoint
+# Status: in-progress
+# Dependencies: 24, 25, 26
+# Priority: high
+# Description: Create FastAPI endpoint to receive tutoring records, validate data, upsert contributor, insert record, and handle unlock logic
+# Details:
+```python
+@app.post("/records")
+async def create_record(
+    record: TutoringRecord,
+    user = Depends(verify_token),
+    supabase = Depends(get_supabase_client)
+):
+    user_id = user['sub']
+    
+    try:
+        # Upsert contributor
+        contributor_data = {
+            'id': user_id,
+            'has_contributed': True,
+            'tutoring_experience': record.tutoring_experience
+        }
+        
+        supabase.table('contributors').upsert(
+            contributor_data,
+            on_conflict='id'
+        ).execute()
+        
+        # Insert tutoring record
+        record_data = {
+            'contributor_id': user_id,
+            'price_per_hour': record.price_per_hour,
+            'currency': record.currency,
+            'subject': record.subject.value,
+            'location_district': record.location_district.value,
+            'tutor_academic_result': record.tutor_academic_result,
+            'student_condition': record.student_condition,
+            'parent_satisfaction': record.parent_satisfaction
+        }
+        
+        result = supabase.table('tutoring_records').insert(record_data).execute()
+        
+        # Log unlock event
+        await log_event({
+            'event_type': 'unlock',
+            'user_id': user_id,
+            'metadata': {'record_id': result.data[0]['id']}
+        })
+        
+        return {
+            'success': True,
+            'message': 'Record submitted successfully',
+            'unlocked': True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+# Test Strategy:
+Test with valid and invalid data, verify contributor is created/updated correctly, ensure duplicate submissions are handled gracefully, check unlock event is logged
+
+# Subtasks:
+## 1. Switch token verification to Supabase Auth get_user(access_token) [done]
+### Dependencies: None
+### Description: Replace manual HS256 JWT decode with Supabase Auth validation to prevent 401 due to mismatched secrets/issuer and support anonymous sessions.
+### Details:
+In `backend/main.py`, `verify_token` now calls `supabase.auth.get_user(access_token)` and returns `{ sub: user.id, email }`. Frontend continues to send `Authorization: Bearer ${session.access_token}`. Ensure backend has `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` set. Test via curl with a fresh token.
+

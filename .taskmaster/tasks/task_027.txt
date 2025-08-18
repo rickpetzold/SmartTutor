@@ -1,0 +1,57 @@
+# Task ID: 27
+# Title: Build Tutoring Record Submission Form
+# Status: done
+# Dependencies: 23
+# Priority: high
+# Description: Create React Hook Form with Zod validation for tutoring record submission, including all required fields and client-side validation
+# Details:
+```typescript
+// schemas/tutoring-record.ts
+import { z } from 'zod'
+
+export const tutoringRecordSchema = z.object({
+  price_per_hour: z.number().positive(),
+  currency: z.enum(['HKD', 'USD']),
+  subject: z.enum(['ENGLISH', 'CHINESE', /* ... */]),
+  location_district: z.enum(['REMOTE', 'MID_LEVELS', /* ... */]),
+  tutor_academic_result: z.string().optional(),
+  student_condition: z.string(),
+  parent_satisfaction: z.number().min(1).max(5).optional(),
+  tutoring_experience: z.number().positive().optional()
+})
+
+// components/TutoringRecordForm.tsx
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Button, Input, Select, Label } from '@/components/ui'
+
+export function TutoringRecordForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(tutoringRecordSchema)
+  })
+  
+  const onSubmit = async (data) => {
+    // Submit to API
+  }
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="price_per_hour">Price per Hour</Label>
+        <Input
+          type="number"
+          {...register('price_per_hour', { valueAsNumber: true })}
+          aria-invalid={!!errors.price_per_hour}
+        />
+        {errors.price_per_hour && <span className="text-red-500">{errors.price_per_hour.message}</span>}
+      </div>
+      {/* Additional fields... */}
+    </form>
+  )
+}
+```
+
+Implement all form fields with proper accessibility labels and error messages
+
+# Test Strategy:
+Test form validation catches invalid inputs, verify all fields are properly validated, ensure form is keyboard navigable and screen reader friendly

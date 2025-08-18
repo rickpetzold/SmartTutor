@@ -1,0 +1,66 @@
+# Task ID: 31
+# Title: Implement Give-to-Get Access Control
+# Status: pending
+# Dependencies: 29, 30
+# Priority: medium
+# Description: Create unlock gate UI component and integrate access control logic throughout the application
+# Details:
+```typescript
+// components/UnlockGate.tsx
+export function UnlockGate({ children }) {
+  const { data: hasAccess, isLoading } = useQuery({
+    queryKey: ['access-status'],
+    queryFn: checkAccessStatus
+  })
+  
+  if (isLoading) return <Skeleton />
+  
+  if (!hasAccess) {
+    return (
+      <div className="max-w-2xl mx-auto p-8 text-center">
+        <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        <h2 className="text-2xl font-bold mb-4">Unlock Full Access</h2>
+        <p className="text-gray-600 mb-6">
+          Share your tutoring experience anonymously to unlock complete market insights
+        </p>
+        <Button asChild size="lg">
+          <Link href="/submit">Submit Your Data</Link>
+        </Button>
+        
+        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+          <Shield className="w-5 h-5 inline mr-2 text-blue-600" />
+          <span className="text-sm text-blue-800">
+            We never collect personal information. All submissions are anonymous.
+          </span>
+        </div>
+      </div>
+    )
+  }
+  
+  return children
+}
+
+// hooks/useAccessStatus.ts
+export function useAccessStatus() {
+  const { session } = useAuth()
+  
+  return useQuery({
+    queryKey: ['access-status', session?.user?.id],
+    queryFn: async () => {
+      if (!session) return false
+      
+      const response = await fetch('/api/check-access', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      
+      return response.ok
+    },
+    enabled: !!session
+  })
+}
+```
+
+# Test Strategy:
+Test gate shows for non-contributors and allows access for contributors, verify access persists across page refreshes, ensure loading states work correctly

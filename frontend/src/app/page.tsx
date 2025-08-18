@@ -20,6 +20,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { TutoringRecordForm } from "@/components/forms/tutoring-record-form";
 
 export default function Home() {
   const { session, supabase } = useAuth();
@@ -105,7 +114,20 @@ export default function Home() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Recent Records</CardTitle>
-                <Button>Add Record</Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>Add Record</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Tutoring Record</DialogTitle>
+                      <DialogDescription>
+                        Contribute to the community by sharing anonymous data about a tutoring session.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <TutoringRecordForm />
+                  </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent>
               <Table>

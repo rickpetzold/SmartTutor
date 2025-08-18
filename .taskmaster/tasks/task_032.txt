@@ -1,0 +1,65 @@
+# Task ID: 32
+# Title: Implement Analytics and Observability
+# Status: pending
+# Dependencies: 24, 25
+# Priority: low
+# Description: Create event logging system for access events and implement basic observability with structured logging
+# Details:
+```python
+# models/events.py
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Dict, Any
+
+class AccessEvent(BaseModel):
+    event_type: str  # 'unlock', 'view_stats', 'view_records'
+    user_id: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    metadata: Dict[str, Any] = {}
+
+# endpoints
+@app.post("/log_event")
+async def log_event(
+    event: AccessEvent,
+    user = Depends(verify_token),
+    supabase = Depends(get_supabase_client)
+):
+    # Fire and forget - don't block on logging
+    try:
+        supabase.table('access_events').insert({
+            'event_type': event.event_type,
+            'user_id': user['sub'],
+            'metadata': event.metadata
+        }).execute()
+    except Exception as e:
+        logger.error(f"Failed to log event: {e}")
+    
+    return {"status": "ok"}
+
+# Structured logging setup
+import structlog
+
+logger = structlog.get_logger()
+
+# Log query performance
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    logger.info(
+        "request_processed",
+        path=request.url.path,
+        method=request.method,
+        status_code=response.status_code,
+        process_time=process_time
+    )
+    
+    return response
+```
+
+Create access_events table in Supabase migration
+
+# Test Strategy:
+Verify events are logged correctly, test that logging failures don't break main functionality, ensure query performance metrics are captured
