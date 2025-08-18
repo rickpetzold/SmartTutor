@@ -200,7 +200,7 @@
         "dependencies": [
           25
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -213,13 +213,13 @@
         "dependencies": [
           25
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-12T22:49:16.534Z",
+      "updated": "2025-08-18T01:09:34.166Z",
       "description": "Tasks for master context"
     }
   }

@@ -169,6 +169,7 @@ class TutoringRecordCreate(BaseModel):
     tutor_academic_result: Optional[str] = None
     student_condition: str
     parent_satisfaction: Optional[int] = Field(None, ge=1, le=5)
+    tutoring_experience: Optional[int] = Field(None, ge=0)
 
 @app.get("/")
 def read_root():
