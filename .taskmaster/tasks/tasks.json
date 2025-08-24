@@ -185,10 +185,47 @@
         "description": "Implement the main dashboard UI, including a two-column layout with placeholders for charts and a data table, and a header with account management functionality.",
         "details": "",
         "testStrategy": "",
-        "status": "done",
+        "status": "in-progress",
         "dependencies": [],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Scaffold homePage components with mock placeholders",
+            "description": "Create folder `frontend/src/components/homePage` and add mock components (no logic yet): `PriceChart.tsx`, `SatisfactionChart.tsx`, `SubmissionsTable.tsx`. Export simple placeholders and ensure each has an outer container with an id for in-page navigation: `price-chart`, `satisfaction-chart`, `database`.",
+            "details": "- Use UI primitives from `frontend/src/components/ui` where possible (e.g., `card`, `table`, `button`) and apply styles in parent. \n- Files to create:\n  - `frontend/src/components/homePage/PriceChart.tsx`\n  - `frontend/src/components/homePage/SatisfactionChart.tsx`\n  - `frontend/src/components/homePage/SubmissionsTable.tsx`\n- Each component should render a simple heading and placeholder content; no data wiring yet.\n- Ensure exports are default named components.\n",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 2,
+            "title": "Scaffold layout components used across all pages",
+            "description": "Create folder `frontend/src/components/layout` and add layout components: `Header.tsx`, `Footer.tsx`, `Error.tsx`, `Sidebar.tsx`. No complex logic yet.",
+            "details": "- Use primitives from `frontend/src/components/ui` where possible; keep styling light and override in parent.\n- Files to create:\n  - `frontend/src/components/layout/Header.tsx`\n  - `frontend/src/components/layout/Footer.tsx`\n  - `frontend/src/components/layout/Error.tsx`\n  - `frontend/src/components/layout/Sidebar.tsx`\n- Integrate later in `frontend/src/app/layout.tsx`.\n",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 3,
+            "title": "Implement Header with navigation and auth controls",
+            "description": "Build `Header.tsx` with SmartTutor logo (left), three buttons (Price Chart, Satisfaction Chart, Database) linking to homepage anchors, and account controls on the right (login/register when logged out; Google avatar + logout when logged in). Add language dropdown (English only for now). Refactor app to use this header globally.",
+            "details": "- File: `frontend/src/components/layout/Header.tsx`; import primitives from `frontend/src/components/ui` (e.g., `button`, `dropdown-menu`, `avatar`).\n- Nav buttons link to `/#price-chart`, `/#satisfaction-chart`, `/#database`.\n- Auth state derives from existing `AuthProvider` in `frontend/src/components/providers/auth-provider.tsx`.\n- Expose callback props for onLogin/onLogout; implement client-side links only.\n- Update `frontend/src/app/layout.tsx` to render `<Header />` above `{children}`.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 4,
+            "title": "Implement Price Bar Chart component with fixed ranges",
+            "description": "Create `PriceChart.tsx` to display counts of price-per-hour in fixed ranges: 0-50, 50-100, 100-150, 150-200, 200+.",
+            "details": "- File: `frontend/src/components/homePage/PriceChart.tsx`.\n- Accept props: `prices: number[]` (optional; default []) and compute bins accordingly.\n- Render accessible bar chart using UI components (`card`, `table`, or simple div bars) without introducing new chart libs yet.\n- Provide aria labels and color contrast; handle empty state.\n",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 35
+          }
+        ]
       },
       {
         "id": 36,
@@ -214,12 +251,72 @@
           25
         ],
         "status": "done",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit and remove existing policies and grants on public.tutoring_records",
+            "description": "Inventory current RLS policies and table/sequence privileges for tutoring_records, then drop any permissive or non-service policies to start from a clean state.",
+            "dependencies": [],
+            "details": "Implementation steps:\n1) Inspect current policies and grants (run in SQL console):\n- List policies:\n  SELECT policyname, permissive, roles, cmd, qual, with_check\n  FROM pg_policies\n  WHERE schemaname = 'public' AND tablename = 'tutoring_records';\n- List table grants:\n  SELECT grantee, privilege_type\n  FROM information_schema.role_table_grants\n  WHERE table_schema = 'public' AND table_name = 'tutoring_records';\n- List sequences owned/used by the table:\n  SELECT format('%I.%I', ns.nspname, s.relname) AS seq_qualname\n  FROM pg_class t\n  JOIN pg_namespace tn ON tn.oid = t.relnamespace\n  JOIN pg_depend dep ON dep.refobjid = t.oid AND dep.deptype IN ('a','n')\n  JOIN pg_class s ON s.oid = dep.objid AND s.relkind = 'S'\n  JOIN pg_namespace ns ON ns.oid = s.relnamespace\n  WHERE tn.nspname = 'public' AND t.relname = 'tutoring_records';\n\n2) Drop existing policies on the table to ensure lock-down (idempotent):\nDO $$\nDECLARE r record;\nBEGIN\n  FOR r IN (\n    SELECT policyname FROM pg_policies\n    WHERE schemaname = 'public' AND tablename = 'tutoring_records'\n  ) LOOP\n    EXECUTE format('DROP POLICY IF EXISTS %I ON public.tutoring_records', r.policyname);\n  END LOOP;\nEXCEPTION WHEN others THEN\n  NULL;\nEND $$;",
+            "status": "pending",
+            "testStrategy": "After running, SELECT COUNT(*) FROM pg_policies WHERE schemaname='public' AND tablename='tutoring_records'; should be 0. Ensure no unexpected grants remain by querying information_schema.role_table_grants."
+          },
+          {
+            "id": 2,
+            "title": "Enable and enforce Row Level Security on public.tutoring_records",
+            "description": "Turn on RLS and optionally force RLS to ensure all roles (except BYPASSRLS roles such as Supabase service_role) are subject to policies.",
+            "dependencies": [
+              "37.1"
+            ],
+            "details": "Run the following idempotent migration:\nDO $$ BEGIN\n  ALTER TABLE public.tutoring_records ENABLE ROW LEVEL SECURITY;\nEXCEPTION WHEN others THEN NULL; END $$;\n\nDO $$ BEGIN\n  ALTER TABLE public.tutoring_records FORCE ROW LEVEL SECURITY;\nEXCEPTION WHEN others THEN NULL; END $$;",
+            "status": "pending",
+            "testStrategy": "Verify flags: SELECT relrowsecurity, relforcerowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname='tutoring_records'; Both should be true."
+          },
+          {
+            "id": 3,
+            "title": "Create service role full access RLS policy (defense in depth)",
+            "description": "Add a policy allowing all operations only when auth.role() = 'service_role'. Service role typically bypasses RLS in Supabase, but this policy provides defense in depth.",
+            "dependencies": [
+              "37.1",
+              "37.2"
+            ],
+            "details": "Create an idempotent policy:\nDO $$ BEGIN\n  CREATE POLICY \"service role full access\"\n  ON public.tutoring_records\n  FOR ALL\n  USING (auth.role() = 'service_role')\n  WITH CHECK (auth.role() = 'service_role');\nEXCEPTION WHEN others THEN NULL; END $$;",
+            "status": "pending",
+            "testStrategy": "SELECT policyname, cmd FROM pg_policies WHERE schemaname='public' AND tablename='tutoring_records' AND policyname='service role full access'; Should return one row with cmd='all'."
+          },
+          {
+            "id": 4,
+            "title": "Revoke public/anon/authenticated privileges and grant service_role privileges",
+            "description": "Lock down table and related sequences by revoking privileges from PUBLIC, anon, and authenticated roles; explicitly grant to service_role for clarity.",
+            "dependencies": [
+              "37.1",
+              "37.2",
+              "37.3"
+            ],
+            "details": "Apply table-level privilege hardening:\nREVOKE ALL ON TABLE public.tutoring_records FROM PUBLIC;\nREVOKE ALL ON TABLE public.tutoring_records FROM anon;\nREVOKE ALL ON TABLE public.tutoring_records FROM authenticated;\nGRANT ALL ON TABLE public.tutoring_records TO service_role;\n\nHarden related sequences (idempotent):\nDO $$\nDECLARE r record;\nBEGIN\n  FOR r IN (\n    SELECT format('%I.%I', ns.nspname, s.relname) AS seq_qualname\n    FROM pg_class t\n    JOIN pg_namespace tn ON tn.oid = t.relnamespace\n    JOIN pg_depend dep ON dep.refobjid = t.oid AND dep.deptype IN ('a','n')\n    JOIN pg_class s ON s.oid = dep.objid AND s.relkind = 'S'\n    JOIN pg_namespace ns ON ns.oid = s.relnamespace\n    WHERE tn.nspname = 'public' AND t.relname = 'tutoring_records'\n  ) LOOP\n    EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC, anon, authenticated', r.seq_qualname);\n    EXECUTE format('GRANT ALL ON SEQUENCE %s TO service_role', r.seq_qualname);\n  END LOOP;\nEXCEPTION WHEN others THEN NULL; END $$;",
+            "status": "pending",
+            "testStrategy": "Validate table grants: SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_schema='public' AND table_name='tutoring_records'; Should show service_role (and owner) only. For sequences, verify using the sequence query and pg_sequences plus information_schema.role_usage_grants where applicable."
+          },
+          {
+            "id": 5,
+            "title": "End-to-end verification using PostgREST/Supabase and psql role simulation",
+            "description": "Confirm anon/authenticated clients cannot access the table and backend (service key) can fully operate. Include HTTP and SQL checks.",
+            "dependencies": [
+              "37.1",
+              "37.2",
+              "37.3",
+              "37.4"
+            ],
+            "details": "HTTP tests (replace placeholders):\n- With anon key (should fail):\n  curl -i \\\n    -H \"apikey: ${SUPABASE_ANON_KEY}\" \\\n    -H \"Authorization: Bearer ${SUPABASE_ANON_KEY}\" \\\n    \"${SUPABASE_URL}/rest/v1/tutoring_records?select=*\"  # Expect 401/403 or empty with permission denied\n\n- With service key (should succeed):\n  curl -i \\\n    -H \"apikey: ${SUPABASE_SERVICE_KEY}\" \\\n    -H \"Authorization: Bearer ${SUPABASE_SERVICE_KEY}\" \\\n    -H \"Content-Type: application/json\" \\\n    -d '{\"subject\":\"ENGLISH\",\"price_per_hour\":300,\"currency\":\"HKD\",\"location_district\":\"REMOTE\",\"student_condition\":\"...\"}' \\\n    \"${SUPABASE_URL}/rest/v1/tutoring_records\"  # Expect 201\n  curl -i \\\n    -H \"apikey: ${SUPABASE_SERVICE_KEY}\" \\\n    -H \"Authorization: Bearer ${SUPABASE_SERVICE_KEY}\" \\\n    \"${SUPABASE_URL}/rest/v1/tutoring_records?select=*\"  # Expect 200 with rows\n\nSQL tests (optional, in psql with appropriate roles present):\n- SET ROLE anon; SELECT 1 FROM public.tutoring_records LIMIT 1;  -- Expect permission denied due to RLS/privileges\n- RESET ROLE; SET ROLE service_role; INSERT/SELECT/UPDATE/DELETE on public.tutoring_records; -- Expect success",
+            "status": "pending",
+            "testStrategy": "Automate simple CI check: run anon GET expecting HTTP 401/403; run service POST+GET expecting 201 and 200. Additionally, query pg_policies and pg_class flags to assert RLS state remains enabled/enforced."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-18T01:31:58.909Z",
+      "updated": "2025-08-21T04:15:59.898Z",
       "description": "Tasks for master context"
     }
   }

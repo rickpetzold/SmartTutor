@@ -1,15 +1,15 @@
 {
   "models": {
     "main": {
-      "provider": "anthropic",
-      "modelId": "claude-sonnet-4-20250514",
-      "maxTokens": 64000,
+      "provider": "openai",
+      "modelId": "gpt-5",
+      "maxTokens": 100000,
       "temperature": 0.2
     },
     "research": {
-      "provider": "gemini-cli",
-      "modelId": "gemini-2.5-pro",
-      "maxTokens": 65536,
+      "provider": "openai",
+      "modelId": "gpt-5",
+      "maxTokens": 100000,
       "temperature": 0.1
     },
     "fallback": {

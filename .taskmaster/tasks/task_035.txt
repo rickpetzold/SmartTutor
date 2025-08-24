@@ -6,6 +6,11 @@
 # Description: Implement the main dashboard UI, including a two-column layout with placeholders for charts and a data table, and a header with account management functionality.
 # Details:
 
-
 # Test Strategy:
 
+
+create a separate folder under /frontend/src/components named homePage and add the components for price chart and satisfaction chart data there as well a component that is responsible for handling the table with submission data.
+create a separate folder under /frontend/src/components named layout and add all layout components that appear on all pages: header, footer, error copmonent, sidebar
+
+use ui components from /frontend/src/components/ui when possible with style overrides in the parent component
+create a component with bar chart for the price data that displays the count of the price ranges, use ranges of 0-50, 50-100, 100-150, 150-200 and 200-more

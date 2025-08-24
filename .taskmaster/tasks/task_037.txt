@@ -1,0 +1,33 @@
+# Task ID: 37
+# Title: Enable RLS on public.tutoring_records
+# Status: done
+# Dependencies: 25
+# Priority: high
+# Description: Enable Row Level Security and lock down access on tutoring_records; allow backend (service role) full access only.
+# Details:
+```sql
+-- Enable RLS
+DO $$ BEGIN
+  ALTER TABLE public.tutoring_records ENABLE ROW LEVEL SECURITY;
+EXCEPTION WHEN others THEN
+  -- ignore if already enabled
+  NULL;
+END $$;
+
+-- Optional: Drop existing permissive policies to start clean
+-- DROP POLICY IF EXISTS "Allow all" ON public.tutoring_records;
+
+-- Service role policy (defense in depth; service role bypasses RLS by default)
+DO $$ BEGIN
+  CREATE POLICY "service role full access"
+  ON public.tutoring_records
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+EXCEPTION WHEN others THEN
+  NULL;
+END $$;
+```
+
+# Test Strategy:
+From anon client, direct select should fail (403) via PostgREST; from backend using service key, insert/select should succeed.
