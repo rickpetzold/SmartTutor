@@ -1,16 +1,96 @@
 # Task ID: 35
 # Title: Build Main Dashboard UI
-# Status: done
+# Status: in-progress
 # Dependencies: None
 # Priority: high
 # Description: Implement the main dashboard UI, including a two-column layout with placeholders for charts and a data table, and a header with account management functionality.
 # Details:
 
+
 # Test Strategy:
 
 
-create a separate folder under /frontend/src/components named homePage and add the components for price chart and satisfaction chart data there as well a component that is responsible for handling the table with submission data.
-create a separate folder under /frontend/src/components named layout and add all layout components that appear on all pages: header, footer, error copmonent, sidebar
+# Subtasks:
+## 1. Scaffold homePage components with mock placeholders [done]
+### Dependencies: None
+### Description: Create folder `frontend/src/components/homePage` and add mock components (no logic yet): `PriceChart.tsx`, `SatisfactionChart.tsx`, `SubmissionsTable.tsx`. Export simple placeholders and ensure each has an outer container with an id for in-page navigation: `price-chart`, `satisfaction-chart`, `database`.
+### Details:
+- Use UI primitives from `frontend/src/components/ui` where possible (e.g., `card`, `table`, `button`) and apply styles in parent. 
+- Files to create:
+  - `frontend/src/components/homePage/PriceChart.tsx`
+  - `frontend/src/components/homePage/SatisfactionChart.tsx`
+  - `frontend/src/components/homePage/SubmissionsTable.tsx`
+- Each component should render a simple heading and placeholder content; no data wiring yet.
+- Ensure exports are default named components.
 
-use ui components from /frontend/src/components/ui when possible with style overrides in the parent component
-create a component with bar chart for the price data that displays the count of the price ranges, use ranges of 0-50, 50-100, 100-150, 150-200 and 200-more
+
+## 2. Scaffold layout components used across all pages [done]
+### Dependencies: None
+### Description: Create folder `frontend/src/components/layout` and add layout components: `Header.tsx`, `Footer.tsx`, `Error.tsx`, `Sidebar.tsx`. No complex logic yet.
+### Details:
+- Use primitives from `frontend/src/components/ui` where possible; keep styling light and override in parent.
+- Files to create:
+  - `frontend/src/components/layout/Header.tsx`
+  - `frontend/src/components/layout/Footer.tsx`
+  - `frontend/src/components/layout/Error.tsx`
+  - `frontend/src/components/layout/Sidebar.tsx`
+- Integrate later in `frontend/src/app/layout.tsx`.
+
+
+## 3. Implement Header with navigation and auth controls [done]
+### Dependencies: None
+### Description: Build `Header.tsx` with SmartTutor logo (left), three buttons (Price Chart, Satisfaction Chart, Database) linking to homepage anchors, and account controls on the right (login/register when logged out; Google avatar + logout when logged in). Add language dropdown (English only for now). Refactor app to use this header globally.
+### Details:
+- File: `frontend/src/components/layout/Header.tsx`; import primitives from `frontend/src/components/ui` (e.g., `button`, `dropdown-menu`, `avatar`).
+- Nav buttons link to `/#price-chart`, `/#satisfaction-chart`, `/#database`.
+- Auth state derives from existing `AuthProvider` in `frontend/src/components/providers/auth-provider.tsx`.
+- Expose callback props for onLogin/onLogout; implement client-side links only.
+- Update `frontend/src/app/layout.tsx` to render `<Header />` above `{children}`.
+
+## 4. Implement Price Bar Chart component with fixed ranges [done]
+### Dependencies: None
+### Description: Create `PriceChart.tsx` to display counts of price-per-hour in fixed ranges: 0-50, 50-100, 100-150, 150-200, 200+.
+### Details:
+- File: `frontend/src/components/homePage/PriceChart.tsx`.
+- Accept props: `prices: number[]` (optional; default []) and compute bins accordingly.
+- Render accessible bar chart using UI components (`card`, `table`, or simple div bars) without introducing new chart libs yet.
+- Provide aria labels and color contrast; handle empty state.
+
+
+## 5. Enhance Header UI and layout [pending]
+### Dependencies: None
+### Description: Polish header styling and layout: sticky top bar, backdrop blur, proper padding/gap, hover/focus styles, button variants, and improved spacing. Keep using components from frontend/src/components/ui.
+### Details:
+- Add sticky header with top-0 z-40, backdrop-blur and border.
+- Improve logo typography and spacing.
+- Use Button variants consistently with accessible focus rings.
+- Ensure dark mode readiness via Tailwind tokens.
+- Keep styles minimal in component and override in parent if needed.
+
+## 6. Implement section navigation and scroll behavior [pending]
+### Dependencies: None
+### Description: Make header nav buttons scroll smoothly to homepage anchors and highlight active section (scrollspy).
+### Details:
+- Buttons link to /#price-chart, /#satisfaction-chart, /#database.
+- Add smooth scroll behavior and offset for sticky header.
+- Track active section with IntersectionObserver; set aria-current and selected states.
+- Ensure keyboard activation works and focus is managed.
+
+## 7. Add mobile navigation and accessibility [pending]
+### Dependencies: None
+### Description: Add a mobile menu for the header with proper a11y and keyboard support.
+### Details:
+- Use Sheet/Dialog from ui for mobile nav; toggle via a menu button with aria-controls/expanded.
+- Trap focus when open; close on route change and Esc.
+- Provide a skip-to-content link for accessibility.
+- Ensure aria-labels and aria-current are set appropriately.
+
+## 8. Wire auth actions, loading, and error handling [pending]
+### Dependencies: None
+### Description: Make login/register/logout functional with user feedback and robust states.
+### Details:
+- Hook up onLogin/onLogout actions using Supabase OAuth and signOut.
+- Show loading states on buttons; handle and toast errors.
+- Render Google avatar/email when logged in; show Register/Login when logged out.
+- Keep logic in Header; consider extracting small hooks if it grows.
+

@@ -194,7 +194,7 @@
             "title": "Scaffold homePage components with mock placeholders",
             "description": "Create folder `frontend/src/components/homePage` and add mock components (no logic yet): `PriceChart.tsx`, `SatisfactionChart.tsx`, `SubmissionsTable.tsx`. Export simple placeholders and ensure each has an outer container with an id for in-page navigation: `price-chart`, `satisfaction-chart`, `database`.",
             "details": "- Use UI primitives from `frontend/src/components/ui` where possible (e.g., `card`, `table`, `button`) and apply styles in parent. \n- Files to create:\n  - `frontend/src/components/homePage/PriceChart.tsx`\n  - `frontend/src/components/homePage/SatisfactionChart.tsx`\n  - `frontend/src/components/homePage/SubmissionsTable.tsx`\n- Each component should render a simple heading and placeholder content; no data wiring yet.\n- Ensure exports are default named components.\n",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -203,7 +203,7 @@
             "title": "Scaffold layout components used across all pages",
             "description": "Create folder `frontend/src/components/layout` and add layout components: `Header.tsx`, `Footer.tsx`, `Error.tsx`, `Sidebar.tsx`. No complex logic yet.",
             "details": "- Use primitives from `frontend/src/components/ui` where possible; keep styling light and override in parent.\n- Files to create:\n  - `frontend/src/components/layout/Header.tsx`\n  - `frontend/src/components/layout/Footer.tsx`\n  - `frontend/src/components/layout/Error.tsx`\n  - `frontend/src/components/layout/Sidebar.tsx`\n- Integrate later in `frontend/src/app/layout.tsx`.\n",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -212,7 +212,7 @@
             "title": "Implement Header with navigation and auth controls",
             "description": "Build `Header.tsx` with SmartTutor logo (left), three buttons (Price Chart, Satisfaction Chart, Database) linking to homepage anchors, and account controls on the right (login/register when logged out; Google avatar + logout when logged in). Add language dropdown (English only for now). Refactor app to use this header globally.",
             "details": "- File: `frontend/src/components/layout/Header.tsx`; import primitives from `frontend/src/components/ui` (e.g., `button`, `dropdown-menu`, `avatar`).\n- Nav buttons link to `/#price-chart`, `/#satisfaction-chart`, `/#database`.\n- Auth state derives from existing `AuthProvider` in `frontend/src/components/providers/auth-provider.tsx`.\n- Expose callback props for onLogin/onLogout; implement client-side links only.\n- Update `frontend/src/app/layout.tsx` to render `<Header />` above `{children}`.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -221,6 +221,42 @@
             "title": "Implement Price Bar Chart component with fixed ranges",
             "description": "Create `PriceChart.tsx` to display counts of price-per-hour in fixed ranges: 0-50, 50-100, 100-150, 150-200, 200+.",
             "details": "- File: `frontend/src/components/homePage/PriceChart.tsx`.\n- Accept props: `prices: number[]` (optional; default []) and compute bins accordingly.\n- Render accessible bar chart using UI components (`card`, `table`, or simple div bars) without introducing new chart libs yet.\n- Provide aria labels and color contrast; handle empty state.\n",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 5,
+            "title": "Enhance Header UI and layout",
+            "description": "Polish header styling and layout: sticky top bar, backdrop blur, proper padding/gap, hover/focus styles, and improved spacing. Keep using components from frontend/src/components/ui.",
+            "details": "- Add sticky header with top-0 z-40, backdrop-blur and border.\n- Improve logo typography and spacing.\n- Use Button variants consistently with accessible focus rings.\n- Ensure dark mode readiness via Tailwind tokens.\n- Keep styles minimal in component and override in parent if needed.",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 6,
+            "title": "Implement section navigation and scroll behavior",
+            "description": "Make header nav buttons scroll smoothly to homepage anchors and highlight active section (scrollspy).",
+            "details": "- Buttons link to /#price-chart, /#satisfaction-chart, /#database.\n- Add smooth scroll behavior and offset for sticky header.\n- Track active section with IntersectionObserver; set aria-current and selected states.\n- Ensure keyboard activation works and focus is managed.",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 7,
+            "title": "Add mobile navigation and accessibility",
+            "description": "Add a mobile menu for the header with proper a11y and keyboard support.",
+            "details": "- Use Sheet/Dialog from ui for mobile nav; toggle via a menu button with aria-controls/expanded.\n- Trap focus when open; close on route change and Esc.\n- Provide a skip-to-content link for accessibility.\n- Ensure aria-labels and aria-current are set appropriately.",
+            "status": "cancelled",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 8,
+            "title": "Wire auth actions, loading, and error handling",
+            "description": "Make login/register/logout functional with user feedback and robust states.",
+            "details": "- Hook up onLogin/onLogout actions using Supabase OAuth and signOut.\n- Show loading states on buttons; handle and toast errors.\n- Render Google avatar/email when logged in; show Register/Login when logged out.\n- Keep logic in Header; consider extracting small hooks if it grows.",
             "status": "pending",
             "dependencies": [],
             "parentTaskId": 35
@@ -316,7 +352,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-21T04:15:59.898Z",
+      "updated": "2025-08-24T06:20:20.455Z",
       "description": "Tasks for master context"
     }
   }

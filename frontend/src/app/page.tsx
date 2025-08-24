@@ -1,16 +1,7 @@
 'use client';
 
-import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -19,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -31,16 +21,6 @@ import {
 import { TutoringRecordForm } from "@/components/forms/tutoring-record-form";
 
 export default function Home() {
-  const { session, supabase } = useAuth();
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const handleGoogleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
-  };
-  
   // Dummy data for the table
   const records = [
     { id: 1, subject: 'Mathematics', price: 550, location: 'Causeway Bay', satisfaction: 4 },
@@ -50,38 +30,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
-      <header className="flex items-center justify-between h-16 px-6 border-b bg-white">
-        <h1 className="text-lg font-semibold">SmartTutor</h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar>
-                 <AvatarImage src={session?.user?.user_metadata?.avatar_url} alt={session?.user?.user_metadata?.full_name} />
-                <AvatarFallback>
-                  {session?.user?.email?.charAt(0).toUpperCase() || 'A'}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {session ? (
-              <>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
-              </>
-            ) : (
-              <DropdownMenuItem onClick={handleGoogleSignIn}>
-                Sign In with Google
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
-
       <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-3 flex flex-col gap-6">

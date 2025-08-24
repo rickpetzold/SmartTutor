@@ -31,3 +31,123 @@ END $$;
 
 # Test Strategy:
 From anon client, direct select should fail (403) via PostgREST; from backend using service key, insert/select should succeed.
+
+# Subtasks:
+## 1. Audit and remove existing policies and grants on public.tutoring_records [pending]
+### Dependencies: None
+### Description: Inventory current RLS policies and table/sequence privileges for tutoring_records, then drop any permissive or non-service policies to start from a clean state.
+### Details:
+Implementation steps:
+1) Inspect current policies and grants (run in SQL console):
+- List policies:
+  SELECT policyname, permissive, roles, cmd, qual, with_check
+  FROM pg_policies
+  WHERE schemaname = 'public' AND tablename = 'tutoring_records';
+- List table grants:
+  SELECT grantee, privilege_type
+  FROM information_schema.role_table_grants
+  WHERE table_schema = 'public' AND table_name = 'tutoring_records';
+- List sequences owned/used by the table:
+  SELECT format('%I.%I', ns.nspname, s.relname) AS seq_qualname
+  FROM pg_class t
+  JOIN pg_namespace tn ON tn.oid = t.relnamespace
+  JOIN pg_depend dep ON dep.refobjid = t.oid AND dep.deptype IN ('a','n')
+  JOIN pg_class s ON s.oid = dep.objid AND s.relkind = 'S'
+  JOIN pg_namespace ns ON ns.oid = s.relnamespace
+  WHERE tn.nspname = 'public' AND t.relname = 'tutoring_records';
+
+2) Drop existing policies on the table to ensure lock-down (idempotent):
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN (
+    SELECT policyname FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'tutoring_records'
+  ) LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.tutoring_records', r.policyname);
+  END LOOP;
+EXCEPTION WHEN others THEN
+  NULL;
+END $$;
+
+## 2. Enable and enforce Row Level Security on public.tutoring_records [pending]
+### Dependencies: 37.1
+### Description: Turn on RLS and optionally force RLS to ensure all roles (except BYPASSRLS roles such as Supabase service_role) are subject to policies.
+### Details:
+Run the following idempotent migration:
+DO $$ BEGIN
+  ALTER TABLE public.tutoring_records ENABLE ROW LEVEL SECURITY;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.tutoring_records FORCE ROW LEVEL SECURITY;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+## 3. Create service role full access RLS policy (defense in depth) [pending]
+### Dependencies: 37.1, 37.2
+### Description: Add a policy allowing all operations only when auth.role() = 'service_role'. Service role typically bypasses RLS in Supabase, but this policy provides defense in depth.
+### Details:
+Create an idempotent policy:
+DO $$ BEGIN
+  CREATE POLICY "service role full access"
+  ON public.tutoring_records
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+EXCEPTION WHEN others THEN NULL; END $$;
+
+## 4. Revoke public/anon/authenticated privileges and grant service_role privileges [pending]
+### Dependencies: 37.1, 37.2, 37.3
+### Description: Lock down table and related sequences by revoking privileges from PUBLIC, anon, and authenticated roles; explicitly grant to service_role for clarity.
+### Details:
+Apply table-level privilege hardening:
+REVOKE ALL ON TABLE public.tutoring_records FROM PUBLIC;
+REVOKE ALL ON TABLE public.tutoring_records FROM anon;
+REVOKE ALL ON TABLE public.tutoring_records FROM authenticated;
+GRANT ALL ON TABLE public.tutoring_records TO service_role;
+
+Harden related sequences (idempotent):
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN (
+    SELECT format('%I.%I', ns.nspname, s.relname) AS seq_qualname
+    FROM pg_class t
+    JOIN pg_namespace tn ON tn.oid = t.relnamespace
+    JOIN pg_depend dep ON dep.refobjid = t.oid AND dep.deptype IN ('a','n')
+    JOIN pg_class s ON s.oid = dep.objid AND s.relkind = 'S'
+    JOIN pg_namespace ns ON ns.oid = s.relnamespace
+    WHERE tn.nspname = 'public' AND t.relname = 'tutoring_records'
+  ) LOOP
+    EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC, anon, authenticated', r.seq_qualname);
+    EXECUTE format('GRANT ALL ON SEQUENCE %s TO service_role', r.seq_qualname);
+  END LOOP;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+## 5. End-to-end verification using PostgREST/Supabase and psql role simulation [pending]
+### Dependencies: 37.1, 37.2, 37.3, 37.4
+### Description: Confirm anon/authenticated clients cannot access the table and backend (service key) can fully operate. Include HTTP and SQL checks.
+### Details:
+HTTP tests (replace placeholders):
+- With anon key (should fail):
+  curl -i \
+    -H "apikey: ${SUPABASE_ANON_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+    "${SUPABASE_URL}/rest/v1/tutoring_records?select=*"  # Expect 401/403 or empty with permission denied
+
+- With service key (should succeed):
+  curl -i \
+    -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+    -H "Content-Type: application/json" \
+    -d '{"subject":"ENGLISH","price_per_hour":300,"currency":"HKD","location_district":"REMOTE","student_condition":"..."}' \
+    "${SUPABASE_URL}/rest/v1/tutoring_records"  # Expect 201
+  curl -i \
+    -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+    "${SUPABASE_URL}/rest/v1/tutoring_records?select=*"  # Expect 200 with rows
+
+SQL tests (optional, in psql with appropriate roles present):
+- SET ROLE anon; SELECT 1 FROM public.tutoring_records LIMIT 1;  -- Expect permission denied due to RLS/privileges
+- RESET ROLE; SET ROLE service_role; INSERT/SELECT/UPDATE/DELETE on public.tutoring_records; -- Expect success
+
