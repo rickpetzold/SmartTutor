@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 
@@ -30,8 +31,9 @@ export default function Header() {
         <div className="flex items-center justify-between rounded-2xl bg-gray-500/50 px-4 py-2">
           {/* Left: Logo + Section Buttons */}
           <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/" className="text-xl font-semibold tracking-tight" aria-label="SmartTutor Home">
-              SmartTutor
+            <Link href="/" aria-label="SmartTutor Home" className="flex items-center">
+              <Image src="/brand/smarttutor-logo.png" alt="SmartTutor" width={28} height={28} priority />
+              <span className="sr-only">SmartTutor</span>
             </Link>
             <nav className="flex items-center gap-2" aria-label="Primary">
               <Link href="/#price-chart">
