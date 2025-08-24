@@ -230,7 +230,7 @@
             "title": "Enhance Header UI and layout",
             "description": "Polish header styling and layout: sticky top bar, backdrop blur, proper padding/gap, hover/focus styles, and improved spacing. Keep using components from frontend/src/components/ui.",
             "details": "- Add sticky header with top-0 z-40, backdrop-blur and border.\n- Improve logo typography and spacing.\n- Use Button variants consistently with accessible focus rings.\n- Ensure dark mode readiness via Tailwind tokens.\n- Keep styles minimal in component and override in parent if needed.",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -352,7 +352,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-24T06:20:20.455Z",
+      "updated": "2025-08-24T06:42:53.993Z",
       "description": "Tasks for master context"
     }
   }
