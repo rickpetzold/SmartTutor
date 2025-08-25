@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
+import { DollarSign } from 'lucide-react'
 
 export const handleAuth = async (supabase: any) => {
   try {
@@ -25,15 +26,15 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-gray-900/40 backdrop-blur supports-[backdrop-filter]:bg-gray-900/30">
-      <div className="mx-auto max-w-7xl px-4 py-3">
-        <div className="flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full">
+      <div className="mx-auto max-w-full px-4 py-3">
+        <div className="flex h-16 w-4/5 mx-auto items-center justify-between rounded-2xl border border-gray-300 bg-gray-900/40 backdrop-blur supports-[backdrop-filter]:bg-gray-900/30 px-4">
           {/* Left: Logo + chart shortcuts */}
-          <div className="flex items-center gap-[1rem]">
+          <div className="flex items-center gap-6">
             <Link
               href="/"
               aria-label="SmartTutor Home"
-              className="flex items-center gap-24"
+              className="flex items-center"
             >
               <Image
                 src="/brand/smarttutor-logo.png"
@@ -43,12 +44,18 @@ export default function Header() {
                 priority
               />
             </Link>
-            <nav className="flex items-center" aria-label="Shortcuts">
+            <nav className="flex items-center gap-6" aria-label="Shortcuts">
               <Link href="/#price-chart">
-                <Button>Price Chart</Button>
+                <Button variant="outline">
+                  <DollarSign className="h-4 w-2" />
+                  Price Chart
+                </Button>
               </Link>
               <Link href="/#satisfaction-chart">
-                <Button>Satisfaction Chart</Button>
+                <Button variant="outline">Satisfaction Chart</Button>
+              </Link>
+              <Link href="/#database">
+                <Button variant="outline">Database</Button>
               </Link>
             </nav>
           </div>
