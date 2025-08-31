@@ -25,13 +25,6 @@ export default function Sidebar() {
     }
   }
 
-  const poppins = Poppins({
-    subsets: ["latin"],
-    weight: ["600"],
-    variable: "--font-display",
-    display: "swap",
-  });
-
   return (
     <aside className="hidden md:flex h-svh w-64 shrink-0 sticky top-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex h-full w-full flex-col">
@@ -44,10 +37,10 @@ export default function Sidebar() {
             <Image
               src="/brand/smarttutor-logo.png"
               alt="SmartTutor"
-              width={40}
-              height={40}
+              width={80}
+              height={80}
             />
-            <span className="font-display">SmartTutor</span>
+            <span className="font-display text-2xl">SmartTutor</span>
           </Link>
         </div>
         <nav className="flex-1 px-2 py-2 space-y-1">
@@ -94,6 +87,3 @@ export default function Sidebar() {
     </aside>
   )
 }
-
-/* utility for the new display font */
-.font-display { font-family: var(--font-display); }

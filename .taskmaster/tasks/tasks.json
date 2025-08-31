@@ -296,6 +296,42 @@
             "status": "done",
             "dependencies": [],
             "parentTaskId": 35
+          },
+          {
+            "id": 13,
+            "title": "Add Google Sirivennela font and apply to brand label",
+            "description": "Load Sirivennela from Google Fonts globally and use a .font-display utility for the brand text in Sidebar.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 14,
+            "title": "Refactor fonts to next/font in shared module; bold brand label",
+            "description": "Create `frontend/src/lib/fonts.ts` exporting Geist, Geist_Mono, and Sirivennela via next/font. Update layout to consume these and remove <link> tags; set brand label to bold.",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 15,
+            "title": "Wire Sirivennela font globally and apply to sidebar brand",
+            "description": "Fix :root selector in globals.css, ensure --font-display set, and apply to SmartTutor label with bold weight.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 16,
+            "title": "Create mobile-specific header component",
+            "description": "Create a responsive header for phone sizes, showing logo and title left, with language/auth controls right. This will be hidden on larger screens where the sidebar is visible.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 35
           }
         ]
       },
@@ -388,7 +424,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-31T21:10:57.506Z",
+      "updated": "2025-08-31T21:56:19.344Z",
       "description": "Tasks for master context"
     }
   }
