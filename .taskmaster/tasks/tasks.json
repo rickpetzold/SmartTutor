@@ -311,7 +311,7 @@
             "title": "Refactor fonts to next/font in shared module; bold brand label",
             "description": "Create `frontend/src/lib/fonts.ts` exporting Geist, Geist_Mono, and Sirivennela via next/font. Update layout to consume these and remove <link> tags; set brand label to bold.",
             "details": "",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -328,6 +328,15 @@
             "id": 16,
             "title": "Create mobile-specific header component",
             "description": "Create a responsive header for phone sizes, showing logo and title left, with language/auth controls right. This will be hidden on larger screens where the sidebar is visible.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 17,
+            "title": "Adjust mobile header padding to align with app container",
+            "description": "Update `MobileHeader.tsx` to ensure its content aligns with the main app's container padding. Instead of a full-width header with internal padding, the header bar should remain full-width, but its inner `div` should use the same container class or padding values as the main content area for consistent alignment on mobile devices.",
             "details": "",
             "status": "pending",
             "dependencies": [],
@@ -424,7 +433,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-31T21:56:19.344Z",
+      "updated": "2025-08-31T22:15:16.408Z",
       "description": "Tasks for master context"
     }
   }

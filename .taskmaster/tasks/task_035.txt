@@ -136,9 +136,15 @@
 ### Details:
 
 
-## 16. Create mobile-specific header component [pending]
+## 16. Create mobile-specific header component [in-progress]
 ### Dependencies: None
 ### Description: Create a responsive header for phone sizes, showing logo and title left, with language/auth controls right. This will be hidden on larger screens where the sidebar is visible.
+### Details:
+
+
+## 17. Adjust mobile header padding to align with app container [pending]
+### Dependencies: None
+### Description: Update `MobileHeader.tsx` to ensure its content aligns with the main app's container padding. Instead of a full-width header with internal padding, the header bar should remain full-width, but its inner `div` should use the same container class or padding values as the main content area for consistent alignment on mobile devices.
 ### Details:
 
 

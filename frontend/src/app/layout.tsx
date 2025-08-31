@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/providers/auth-provider'
 import Sidebar from '@/components/layout/Sidebar'
 import Footer from '@/components/layout/Footer'
 import { geistSans, geistMono } from '@/lib/fonts'
+import MobileHeader from '@/components/layout/MobileHeader'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -33,6 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-sidebar`}
       >
         <AuthProvider>
+          <MobileHeader />
           <div className="min-h-svh w-full flex">
             <Sidebar />
             <main className="flex-1 min-w-0">
