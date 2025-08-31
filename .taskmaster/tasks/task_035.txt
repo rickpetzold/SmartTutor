@@ -57,9 +57,9 @@
 - Provide aria labels and color contrast; handle empty state.
 
 
-## 5. Enhance Header UI and layout [pending]
+## 5. Enhance Header UI and layout [done]
 ### Dependencies: None
-### Description: Polish header styling and layout: sticky top bar, backdrop blur, proper padding/gap, hover/focus styles, button variants, and improved spacing. Keep using components from frontend/src/components/ui.
+### Description: Polish header styling and layout: sticky top bar, backdrop blur, proper padding/gap, hover/focus styles, and improved spacing. Keep using components from frontend/src/components/ui.
 ### Details:
 - Add sticky header with top-0 z-40, backdrop-blur and border.
 - Improve logo typography and spacing.
@@ -67,7 +67,7 @@
 - Ensure dark mode readiness via Tailwind tokens.
 - Keep styles minimal in component and override in parent if needed.
 
-## 6. Implement section navigation and scroll behavior [pending]
+## 6. Implement section navigation and scroll behavior [in-progress]
 ### Dependencies: None
 ### Description: Make header nav buttons scroll smoothly to homepage anchors and highlight active section (scrollspy).
 ### Details:
@@ -76,7 +76,7 @@
 - Track active section with IntersectionObserver; set aria-current and selected states.
 - Ensure keyboard activation works and focus is managed.
 
-## 7. Add mobile navigation and accessibility [pending]
+## 7. Add mobile navigation and accessibility [cancelled]
 ### Dependencies: None
 ### Description: Add a mobile menu for the header with proper a11y and keyboard support.
 ### Details:
@@ -93,4 +93,28 @@
 - Show loading states on buttons; handle and toast errors.
 - Render Google avatar/email when logged in; show Register/Login when logged out.
 - Keep logic in Header; consider extracting small hooks if it grows.
+
+## 9. Create left Sidebar component replacing header navigation [pending]
+### Dependencies: None
+### Description: Build a fixed left sidebar using shadcn/ui primitives; include logo at top and section links (Price Chart, Satisfaction Chart, Data) with icons. Persist on all pages.
+### Details:
+
+
+## 10. Integrate Sidebar into global layout and adjust content area [pending]
+### Dependencies: None
+### Description: Update `frontend/src/app/layout.tsx` to render the Sidebar and a main content area with responsive padding/margins. Remove old header usage.
+### Details:
+
+
+## 11. Move language and auth controls to sidebar bottom [pending]
+### Dependencies: None
+### Description: Place language selector and login/register/logout controls at the bottom of the sidebar with proper accessibility and states.
+### Details:
+
+
+## 12. Increase contrast and establish reusable grey theme [pending]
+### Dependencies: None
+### Description: Define reusable grey background and contrasting link text tokens in `globals.css` (CSS variables) or shadcn theme config; apply to sidebar.
+### Details:
+
 

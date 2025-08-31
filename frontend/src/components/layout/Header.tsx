@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
-import { DollarSign } from 'lucide-react'
+import { DollarSign, Smile } from 'lucide-react'
 
 export const handleAuth = async (supabase: any) => {
   try {
@@ -45,17 +45,25 @@ export default function Header() {
               />
             </Link>
             <nav className="flex items-center gap-6" aria-label="Shortcuts">
-              <Link href="/#price-chart">
-                <Button variant="outline">
-                  <DollarSign className="h-4 w-2" />
-                  Price Chart
-                </Button>
+              <Link
+                href="/#price-chart"
+                className="flex items-center gap-1 font-semibold text-gray-100 hover:text-white"
+              >
+                <DollarSign className="h-4 w-4" />
+                <span>Price Chart</span>
               </Link>
-              <Link href="/#satisfaction-chart">
-                <Button variant="outline">Satisfaction Chart</Button>
+              <Link
+                href="/#satisfaction-chart"
+                className="flex items-center gap-1 font-semibold text-gray-100 hover:text-white"
+              >
+                <Smile className="h-4 w-4" />
+                <span>Satisfaction Chart</span>
               </Link>
-              <Link href="/#database">
-                <Button variant="outline">Database</Button>
+              <Link
+                href="/#database"
+                className="flex items-center gap-1 font-semibold text-gray-100 hover:text-white"
+              >
+                <span>Database</span>
               </Link>
             </nav>
           </div>

@@ -5,7 +5,6 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
-from jose import jwt, JWTError
 from dotenv import load_dotenv
 from supabase import create_client, Client
 

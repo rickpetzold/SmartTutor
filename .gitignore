@@ -17,7 +17,8 @@
 supabase/.temp/
 
 # Python
-__pycache__/
+backend/__pycache__/
+backend/.python-version
 *.pyc
 .venv/
 venv/

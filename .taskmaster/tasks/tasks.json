@@ -260,6 +260,42 @@
             "status": "pending",
             "dependencies": [],
             "parentTaskId": 35
+          },
+          {
+            "id": 9,
+            "title": "Create left Sidebar component replacing header navigation",
+            "description": "Build a fixed left sidebar using shadcn/ui primitives; include logo at top and section links (Price Chart, Satisfaction Chart, Data) with icons. Persist on all pages.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 10,
+            "title": "Integrate Sidebar into global layout and adjust content area",
+            "description": "Update `frontend/src/app/layout.tsx` to render the Sidebar and a main content area with responsive padding/margins. Remove old header usage.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 11,
+            "title": "Move language and auth controls to sidebar bottom",
+            "description": "Place language selector and login/register/logout controls at the bottom of the sidebar with proper accessibility and states.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
+          },
+          {
+            "id": 12,
+            "title": "Increase contrast and establish reusable grey theme",
+            "description": "Define reusable grey background and contrasting link text tokens in `globals.css` (CSS variables) or shadcn theme config; apply to sidebar.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 35
           }
         ]
       },
@@ -352,7 +388,7 @@
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-08-24T06:42:53.993Z",
+      "updated": "2025-08-31T21:10:57.506Z",
       "description": "Tasks for master context"
     }
   }
