@@ -5,6 +5,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import Footer from '@/components/layout/Footer'
 import { geistSans, geistMono } from '@/lib/fonts'
 import MobileHeader from '@/components/layout/MobileHeader'
+import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -34,16 +35,21 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-sidebar`}
       >
         <AuthProvider>
-          <MobileHeader />
-          <div className="min-h-svh w-full flex">
+          <div className="flex min-h-svh w-full">
             <Sidebar />
-            <main className="flex-1 min-w-0">
-              <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
-                {children}
+            <div className="flex flex-1 flex-col">
+              <MobileHeader />
+              <div className="p-4">
+                <main className="flex-1">
+                  <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
+                    {children}
+                  </div>
+                </main>
               </div>
               <Footer />
-            </main>
+            </div>
           </div>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
