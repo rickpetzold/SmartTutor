@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
 import { Globe } from 'lucide-react'
-import { handleLogin, handleLogout } from '@/lib/auth-actions'
+import { handleLogin, handleLogout, handleRegister } from '@/lib/auth-actions'
 import { useState } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
@@ -16,6 +16,12 @@ export default function MobileHeader() {
   const onLogin = async () => {
     setIsLoading(true)
     await handleLogin(supabase)
+    setIsLoading(false)
+  }
+
+  const onRegister = async () => {
+    setIsLoading(true)
+    await handleRegister(supabase)
     setIsLoading(false)
   }
 
@@ -61,9 +67,19 @@ export default function MobileHeader() {
               </Button>
             </div>
           ) : (
-            <Button size="sm" onClick={onLogin} disabled={isLoading}>
-              {isLoading ? '...' : 'Login'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={onLogin} disabled={isLoading}>
+                {isLoading ? '...' : 'Login'}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={onRegister}
+                disabled={isLoading}
+              >
+                {isLoading ? '...' : 'Register'}
+              </Button>
+            </div>
           )}
         </div>
       </div>

@@ -85,7 +85,7 @@
 - Provide a skip-to-content link for accessibility.
 - Ensure aria-labels and aria-current are set appropriately.
 
-## 8. Wire auth actions, loading, and error handling [pending]
+## 8. Wire auth actions, loading, and error handling [done]
 ### Dependencies: None
 ### Description: Make login/register/logout functional with user feedback and robust states.
 ### Details:
@@ -93,6 +93,25 @@
 - Show loading states on buttons; handle and toast errors.
 - Render Google avatar/email when logged in; show Register/Login when logged out.
 - Keep logic in Header; consider extracting small hooks if it grows.
+<info added on 2025-09-01T20:26:32.519Z>
+- Remove any automatic anonymous sign-in logic from AuthProvider/useAuth; do not create a session on mount. Rely only on supabase.auth.getSession() and supabase.auth.onAuthStateChange for session state.
+- Change onLogin to use supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app-url> } }) with loading and error toasts; no fallback to anonymous or email/password.
+- Update Header to show a single "Login with Google" button when session is null; remove Register/guest options.
+- On logout, call supabase.auth.signOut(), immediately clear local session state, and render the Login button.
+- QA: verify initial load shows no session and the Login button; after Google OAuth, avatar/email display; after logout, session is cleared and Login button reappears; confirm no anonymous sessions are created at any point.
+</info added on 2025-09-01T20:26:32.519Z>
+<info added on 2025-09-01T20:38:12.963Z>
+- Logged-out UI: render two side-by-side buttons in the Header — "Login with Google" and "Register".
+- Add onRegister handler that triggers the same Google OAuth flow but with an explicit consent prompt:
+  - supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app-url>, prompt: 'consent' } })
+- Keep onLogin as-is (Google OAuth with redirectTo only). Both buttons must share loading/error handling; when either is in a loading state, disable both buttons and show appropriate toasts.
+- Do not add any anonymous or email/password fallbacks.
+- QA:
+  - Initial load (no session) shows both Login and Register buttons.
+  - Clicking Login redirects to Google and returns to the app with the expected session; avatar/email render.
+  - Clicking Register opens Google with an explicit consent/account prompt even if already signed in to a Google account in the browser; upon completion, avatar/email render.
+  - After logout, both buttons reappear; no anonymous sessions are created at any point.
+</info added on 2025-09-01T20:38:12.963Z>
 
 ## 9. Create left Sidebar component replacing header navigation [done]
 ### Dependencies: None
@@ -124,7 +143,7 @@
 ### Details:
 
 
-## 14. Refactor fonts to next/font in shared module; bold brand label [in-progress]
+## 14. Refactor fonts to next/font in shared module; bold brand label [done]
 ### Dependencies: None
 ### Description: Create `frontend/src/lib/fonts.ts` exporting Geist, Geist_Mono, and Sirivennela via next/font. Update layout to consume these and remove <link> tags; set brand label to bold.
 ### Details:
@@ -136,15 +155,23 @@
 ### Details:
 
 
-## 16. Create mobile-specific header component [in-progress]
+## 16. Create mobile-specific header component [done]
 ### Dependencies: None
 ### Description: Create a responsive header for phone sizes, showing logo and title left, with language/auth controls right. This will be hidden on larger screens where the sidebar is visible.
 ### Details:
 
 
-## 17. Adjust mobile header padding to align with app container [pending]
+## 17. Adjust mobile header padding to align with app container [done]
 ### Dependencies: None
 ### Description: Update `MobileHeader.tsx` to ensure its content aligns with the main app's container padding. Instead of a full-width header with internal padding, the header bar should remain full-width, but its inner `div` should use the same container class or padding values as the main content area for consistent alignment on mobile devices.
 ### Details:
-
+<info added on 2025-09-01T20:11:08.810Z>
+- Introduce a single shared container utility or component (e.g., app-container: mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8) to standardize horizontal padding across the app.
+- Refactor Layout.tsx so the header bar remains full-width (sticky, bg, shadow), but its inner content is wrapped with the shared app-container. Apply the same app-container to the main content wrapper. Remove container/px classes from the existing nav/header inner div.
+- Update MobileHeader.tsx to remove all internal padding/container classes. Ensure its inner content is rendered inside the app-container provided by Layout so it aligns with the main content area.
+- Remove per-component horizontal padding/container classes from dashboard children (e.g., Charts, DataTable, Filters, KPI/Stats, Sidebar sections) so they inherit alignment from the shared app-container.
+- Preserve vertical spacing with gap/py utilities on sections as needed; only horizontal padding should be centralized.
+- If any component must be full-bleed, explicitly opt it out with a full-bleed wrapper or negative margins while keeping others aligned to the container.
+- QA: Verify header content and main content align at all breakpoints, no double padding, no horizontal scroll on mobile, and consistent max-width behavior.
+</info added on 2025-09-01T20:11:08.810Z>
 

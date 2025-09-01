@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { DollarSign, Smile, Database, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
-import { handleLogin, handleLogout } from '@/lib/auth-actions'
+import { handleLogin, handleLogout, handleRegister } from '@/lib/auth-actions'
 import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -16,6 +16,12 @@ export default function Sidebar() {
   const onLogin = async () => {
     setIsLoading(true)
     await handleLogin(supabase)
+    setIsLoading(false)
+  }
+
+  const onRegister = async () => {
+    setIsLoading(true)
+    await handleRegister(supabase)
     setIsLoading(false)
   }
 
@@ -70,6 +76,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between gap-2">
             <Button
               variant="secondary"
+              size="sm"
               aria-label="Change language"
               className="flex items-center gap-2"
             >
@@ -87,14 +94,19 @@ export default function Sidebar() {
                       .join('')}
                   </AvatarFallback>
                 </Avatar>
-                <Button onClick={onLogout} disabled={isLoading}>
+                <Button size="sm" onClick={onLogout} disabled={isLoading}>
                   {isLoading ? '...' : 'Logout'}
                 </Button>
               </div>
             ) : (
-              <Button onClick={onLogin} disabled={isLoading}>
-                {isLoading ? 'Redirecting...' : 'Login'}
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button size="sm" onClick={onLogin} disabled={isLoading}>
+                  {isLoading ? 'Redirecting...' : 'Login'}
+                </Button>
+                <Button size="sm" onClick={onRegister} disabled={isLoading}>
+                  {isLoading ? '...' : 'Register'}
+                </Button>
+              </div>
             )}
           </div>
         </div>

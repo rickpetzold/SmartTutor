@@ -257,7 +257,7 @@
             "title": "Wire auth actions, loading, and error handling",
             "description": "Make login/register/logout functional with user feedback and robust states.",
             "details": "- Hook up onLogin/onLogout actions using Supabase OAuth and signOut.\n- Show loading states on buttons; handle and toast errors.\n- Render Google avatar/email when logged in; show Register/Login when logged out.\n- Keep logic in Header; consider extracting small hooks if it grows.\n<info added on 2025-09-01T20:26:32.519Z>\n- Remove any automatic anonymous sign-in logic from AuthProvider/useAuth; do not create a session on mount. Rely only on supabase.auth.getSession() and supabase.auth.onAuthStateChange for session state.\n- Change onLogin to use supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app-url> } }) with loading and error toasts; no fallback to anonymous or email/password.\n- Update Header to show a single \"Login with Google\" button when session is null; remove Register/guest options.\n- On logout, call supabase.auth.signOut(), immediately clear local session state, and render the Login button.\n- QA: verify initial load shows no session and the Login button; after Google OAuth, avatar/email display; after logout, session is cleared and Login button reappears; confirm no anonymous sessions are created at any point.\n</info added on 2025-09-01T20:26:32.519Z>\n<info added on 2025-09-01T20:38:12.963Z>\n- Logged-out UI: render two side-by-side buttons in the Header — \"Login with Google\" and \"Register\".\n- Add onRegister handler that triggers the same Google OAuth flow but with an explicit consent prompt:\n  - supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app-url>, prompt: 'consent' } })\n- Keep onLogin as-is (Google OAuth with redirectTo only). Both buttons must share loading/error handling; when either is in a loading state, disable both buttons and show appropriate toasts.\n- Do not add any anonymous or email/password fallbacks.\n- QA:\n  - Initial load (no session) shows both Login and Register buttons.\n  - Clicking Login redirects to Google and returns to the app with the expected session; avatar/email render.\n  - Clicking Register opens Google with an explicit consent/account prompt even if already signed in to a Google account in the browser; upon completion, avatar/email render.\n  - After logout, both buttons reappear; no anonymous sessions are created at any point.\n</info added on 2025-09-01T20:38:12.963Z>",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 35
           },
@@ -429,11 +429,32 @@
             "testStrategy": "Automate simple CI check: run anon GET expecting HTTP 401/403; run service POST+GET expecting 201 and 200. Additionally, query pg_policies and pg_class flags to assert RLS state remains enabled/enforced."
           }
         ]
+      },
+      {
+        "id": 38,
+        "title": "Implement Internationalization (i18n)",
+        "description": "Implement full internationalization (i18n) support for the application, including frontend text and backend data handling.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate `next-intl` for Frontend Internationalization",
+            "description": "Install and configure the `next-intl` library. This includes setting up middleware for locale detection, creating message files for different languages (e.g., `messages/en.json`), and wrapping the app in the `NextIntlClientProvider`.",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 38
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-09T07:17:25.953Z",
-      "updated": "2025-09-01T20:38:22.515Z",
+      "updated": "2025-09-01T20:46:20.302Z",
       "description": "Tasks for master context"
     }
   }
